@@ -2,7 +2,7 @@ import axios from "axios";
 import { getStorageItem, removeStorageItem } from "../lib/storage";
 
 export const axiosClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL ?? "http://localhost:3008/api/v1",
+  baseURL: import.meta.env.VITE_API_URL,
   headers: {
     "Content-Type": "application/json",
   },
