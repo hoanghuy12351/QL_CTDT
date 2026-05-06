@@ -16,7 +16,9 @@ export const groupTypeLabels: Record<TeachingGroupType, string> = {
   tot_nghiep: "Tốt nghiệp",
 };
 
-export function mapOpenedClassCourse(dto: OpenedClassCourseDto): OpenedClassCourse {
+export function mapOpenedClassCourse(
+  dto: OpenedClassCourseDto,
+): OpenedClassCourse {
   return {
     id: dto.keHoachLopHocPhanId,
     semesterPlanId: dto.keHoachHocKyId,
@@ -30,7 +32,7 @@ export function mapOpenedClassCourse(dto: OpenedClassCourseDto): OpenedClassCour
     theoryPeriods: Number(dto.hocPhan?.soTietLyThuyet ?? 0),
     practicePeriods: Number(dto.hocPhan?.soTietThucHanh ?? 0),
     totalPeriods: Number(dto.hocPhan?.tongSoTiet ?? 0),
-    classSize: Number(dto.siSo || dto.lop?.siSo || 0),
+    classSize: Number(dto.siSo ?? dto.lop?.siSo ?? 0),
     groupCount: dto.nhomHocPhan?.length ?? 0,
   };
 }
@@ -41,6 +43,8 @@ export function mapTeachingGroup(dto: TeachingGroupDto): TeachingGroup {
   return {
     id: dto.nhomHocPhanId,
     classCoursePlanId: dto.keHoachLopHocPhanId,
+    classId: classCourse?.lopId ?? 0,
+    courseId: classCourse?.hocPhanId ?? 0,
     code: dto.maNhom,
     name: dto.tenNhom ?? dto.maNhom,
     type: dto.loaiNhom,

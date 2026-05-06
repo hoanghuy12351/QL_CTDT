@@ -9,7 +9,7 @@ export const trainingPlanStatusLabels: Record<TrainingPlanStatus, string> = {
 
 export const semesterPlanStatusLabels: Record<SemesterPlanStatus, string> = {
   du_thao: "Dự thảo",
-  dang_thuc_hien: "Đang thực hiện",
+  dang_thuc_hien: "Đã duyệt / đang thực hiện",
   da_dong: "Đã đóng",
 };
 
@@ -33,7 +33,14 @@ export const trainingPlanColumns = [
   "Khoa",
   "Học kỳ",
   "Trạng thái",
-  "Thao tác",
+];
+
+export const semesterPlanColumns = [
+  "Tên kế hoạch học kỳ",
+  "Kế hoạch năm học",
+  "Học kỳ",
+  "Học phần đã mở",
+  "Trạng thái",
 ];
 
 export const openedSubjectColumns = [

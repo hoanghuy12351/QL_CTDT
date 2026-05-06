@@ -1,5 +1,6 @@
-import { NavLink, useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight, LogOut, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { ChevronDown, ChevronLeft, ChevronRight, LogOut, X } from "lucide-react";
 import { ADMIN_NAV_ITEMS, APP_NAME } from "../../lib/constants";
 import Button from "../../components/ui/Button";
 import { authService } from "../../features/auth/auth.service";
@@ -20,7 +21,27 @@ export default function AdminSidebar({
   onToggleCollapse,
 }: AdminSidebarProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const clearSession = useAuthStore((state) => state.clearSession);
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    const activeGroups = ADMIN_NAV_ITEMS.reduce<Record<string, boolean>>((groups, item) => {
+      const hasActiveChild = item.children?.some((child) =>
+        location.pathname.startsWith(child.to),
+      );
+
+      if (hasActiveChild) {
+        groups[item.to] = true;
+      }
+
+      return groups;
+    }, {});
+
+    if (Object.keys(activeGroups).length > 0) {
+      setOpenGroups((current) => ({ ...current, ...activeGroups }));
+    }
+  }, [location.pathname]);
 
   const handleLogout = async () => {
     try {
@@ -29,6 +50,13 @@ export default function AdminSidebar({
       clearSession();
       navigate("/auth/login", { replace: true });
     }
+  };
+
+  const toggleGroup = (to: string) => {
+    setOpenGroups((current) => ({
+      ...current,
+      [to]: !current[to],
+    }));
   };
 
   return (
@@ -105,31 +133,114 @@ export default function AdminSidebar({
         </div>
 
         <nav className="flex-1 space-y-1 overflow-y-auto p-4">
-          {ADMIN_NAV_ITEMS.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              title={isCollapsed ? item.label : undefined}
-              onClick={onClose}
-              className={({ isActive }) =>
-                [
-                  "group flex min-h-11 items-center rounded-lg text-sm font-semibold transition",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-brand-950",
-                  isCollapsed ? "justify-center px-0 py-2" : "gap-3 px-3 py-2",
-                  isActive
-                    ? "bg-white text-brand-950 shadow-sm"
-                    : "text-blue-50 hover:bg-white/10 hover:text-white active:bg-white/15",
-                ].join(" ")
-              }
-            >
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-white/10 ring-1 ring-inset ring-white/10">
-                <item.icon size={18} aria-hidden="true" />
-              </span>
-              {isCollapsed ? null : (
-                <span className="min-w-0 truncate">{item.label}</span>
-              )}
-            </NavLink>
-          ))}
+          {ADMIN_NAV_ITEMS.map((item) => {
+            const hasChildren = Boolean(item.children?.length);
+            const isGroupActive =
+              hasChildren &&
+              item.children!.some((child) => location.pathname.startsWith(child.to));
+            const isGroupOpen = isGroupActive || openGroups[item.to];
+
+            return (
+              <div key={item.to} className="space-y-1">
+                {hasChildren ? (
+                  <button
+                    type="button"
+                    title={isCollapsed ? item.label : undefined}
+                    aria-expanded={isGroupOpen}
+                    className={[
+                      "group flex min-h-11 w-full items-center rounded-lg text-sm font-semibold transition",
+                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-brand-950",
+                      isCollapsed ? "justify-center px-0 py-2" : "gap-3 px-3 py-2",
+                      isGroupActive
+                        ? "bg-white text-brand-950 shadow-sm"
+                        : "text-blue-50 hover:bg-white/10 hover:text-white active:bg-white/15",
+                    ].join(" ")}
+                    onClick={() => {
+                      if (isCollapsed) {
+                        navigate(item.to);
+                        onClose();
+                        return;
+                      }
+
+                      toggleGroup(item.to);
+                    }}
+                  >
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-white/10 ring-1 ring-inset ring-white/10">
+                      <item.icon size={18} aria-hidden="true" />
+                    </span>
+                    {isCollapsed ? null : (
+                      <>
+                        <span className="min-w-0 flex-1 truncate text-left">
+                          {item.label}
+                        </span>
+                        <ChevronDown
+                          size={16}
+                          aria-hidden="true"
+                          className={[
+                            "shrink-0 transition-transform",
+                            isGroupOpen ? "rotate-180" : "",
+                          ].join(" ")}
+                        />
+                      </>
+                    )}
+                  </button>
+                ) : (
+                  <NavLink
+                    to={item.to}
+                    title={isCollapsed ? item.label : undefined}
+                    onClick={onClose}
+                    className={({ isActive }) =>
+                      [
+                        "group flex min-h-11 items-center rounded-lg text-sm font-semibold transition",
+                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-brand-950",
+                        isCollapsed ? "justify-center px-0 py-2" : "gap-3 px-3 py-2",
+                        isActive
+                          ? "bg-white text-brand-950 shadow-sm"
+                          : "text-blue-50 hover:bg-white/10 hover:text-white active:bg-white/15",
+                      ].join(" ")
+                    }
+                  >
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-white/10 ring-1 ring-inset ring-white/10">
+                      <item.icon size={18} aria-hidden="true" />
+                    </span>
+                    {isCollapsed ? null : (
+                      <span className="min-w-0 truncate">{item.label}</span>
+                    )}
+                  </NavLink>
+                )}
+
+                {hasChildren && isGroupOpen ? (
+                  <div className={isCollapsed ? "space-y-1" : "space-y-1 pl-4"}>
+                    {item.children!.map((child) => (
+                      <NavLink
+                        key={child.to}
+                        to={child.to}
+                        title={isCollapsed ? child.label : undefined}
+                        onClick={onClose}
+                        className={({ isActive }) =>
+                          [
+                            "group flex min-h-10 items-center rounded-lg text-sm font-semibold transition",
+                            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-brand-950",
+                            isCollapsed ? "justify-center px-0 py-2" : "gap-3 px-3 py-2",
+                            isActive
+                              ? "bg-white/90 text-brand-950 shadow-sm"
+                              : "text-blue-100 hover:bg-white/10 hover:text-white active:bg-white/15",
+                          ].join(" ")
+                        }
+                      >
+                        <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-white/10 ring-1 ring-inset ring-white/10">
+                          <child.icon size={16} aria-hidden="true" />
+                        </span>
+                        {isCollapsed ? null : (
+                          <span className="min-w-0 truncate">{child.label}</span>
+                        )}
+                      </NavLink>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            );
+          })}
         </nav>
 
         <div className="border-t border-white/10 p-4">

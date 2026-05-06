@@ -1,6 +1,11 @@
 import type { PaginationMeta } from "../../types/api.types";
 
-export type TeachingGroupType = "ly_thuyet" | "thuc_hanh" | "do_an" | "thuc_tap" | "tot_nghiep";
+export type TeachingGroupType =
+  | "ly_thuyet"
+  | "thuc_hanh"
+  | "do_an"
+  | "thuc_tap"
+  | "tot_nghiep";
 
 export type OpenedClassCourseDto = {
   keHoachLopHocPhanId: number;
@@ -59,6 +64,8 @@ export type OpenedClassCourse = {
 export type TeachingGroup = {
   id: number;
   classCoursePlanId: number;
+  classId: number;
+  courseId: number;
   code: string;
   name: string;
   type: TeachingGroupType;

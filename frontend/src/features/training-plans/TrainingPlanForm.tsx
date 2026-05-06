@@ -1,10 +1,15 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Save } from "lucide-react";
 import Button from "../../components/ui/Button";
-import SelectInput, { type SelectOption } from "../../components/ui/SelectInput";
+import SelectInput, {
+  type SelectOption,
+} from "../../components/ui/SelectInput";
 import TextareaInput from "../../components/ui/TextareaInput";
 import TextInput from "../../components/ui/TextInput";
-import type { TrainingPlan, TrainingPlanFormValues } from "./trainingPlan.types";
+import type {
+  TrainingPlan,
+  TrainingPlanFormValues,
+} from "./trainingPlan.types";
 
 type TrainingPlanFormProps = {
   initialData?: TrainingPlan | null;
@@ -44,7 +49,9 @@ export default function TrainingPlanForm({
     };
   }, [initialData]);
   const [values, setValues] = useState(initialValues);
-  const [errors, setErrors] = useState<Partial<Record<keyof TrainingPlanFormValues, string>>>({});
+  const [errors, setErrors] = useState<
+    Partial<Record<keyof TrainingPlanFormValues, string>>
+  >({});
 
   useEffect(() => {
     setValues(initialValues);
@@ -69,33 +76,70 @@ export default function TrainingPlanForm({
       return;
     }
 
-    onSubmit({ ...values, code: values.code.trim(), name: values.name.trim(), note: values.note.trim() });
+    onSubmit({
+      ...values,
+      code: values.code.trim(),
+      name: values.name.trim(),
+      note: values.note.trim(),
+    });
   };
 
   return (
     <form className="space-y-6" onSubmit={handleSubmit}>
       <div className="grid gap-x-6 gap-y-5 md:grid-cols-2">
-        <TextInput label="Mã kế hoạch *" error={errors.code} disabled={isSubmitting} value={values.code} onChange={(event) => setField("code", event.target.value)} />
-        <TextInput label="Tên kế hoạch *" error={errors.name} disabled={isSubmitting} value={values.name} onChange={(event) => setField("name", event.target.value)} />
-        <SelectInput label="Năm học *" error={errors.schoolYearId} disabled={isSubmitting} options={schoolYearOptions} value={values.schoolYearId} onChange={(event) => setField("schoolYearId", event.target.value)} />
-        <SelectInput label="Khoa *" error={errors.facultyId} disabled={isSubmitting} options={facultyOptions} value={values.facultyId} onChange={(event) => setField("facultyId", event.target.value)} />
-        <SelectInput
-          label="Trạng thái"
+        <TextInput
+          label="Mã kế hoạch *"
+          error={errors.code}
           disabled={isSubmitting}
-          options={[
-            { label: "Dự thảo", value: "du_thao" },
-            { label: "Đã duyệt", value: "da_duyet" },
-            { label: "Đang thực hiện", value: "dang_thuc_hien" },
-            { label: "Đã đóng", value: "da_dong" },
-          ]}
-          value={values.status}
-          onChange={(event) => setField("status", event.target.value)}
+          value={values.code}
+          onChange={(event) => setField("code", event.target.value)}
+        />
+        <TextInput
+          label="Tên kế hoạch *"
+          error={errors.name}
+          disabled={isSubmitting}
+          value={values.name}
+          onChange={(event) => setField("name", event.target.value)}
+        />
+        <SelectInput
+          label="Năm học *"
+          error={errors.schoolYearId}
+          disabled={isSubmitting}
+          options={schoolYearOptions}
+          value={values.schoolYearId}
+          onChange={(event) => setField("schoolYearId", event.target.value)}
+        />
+        <SelectInput
+          label="Khoa *"
+          error={errors.facultyId}
+          disabled={isSubmitting}
+          options={facultyOptions}
+          value={values.facultyId}
+          onChange={(event) => setField("facultyId", event.target.value)}
         />
       </div>
-      <TextareaInput label="Ghi chú" disabled={isSubmitting} value={values.note} onChange={(event) => setField("note", event.target.value)} />
+      <TextareaInput
+        label="Ghi chú"
+        disabled={isSubmitting}
+        value={values.note}
+        onChange={(event) => setField("note", event.target.value)}
+      />
       <div className="flex flex-col-reverse gap-3 pt-3 sm:flex-row sm:justify-end">
-        <Button type="button" variant="secondary" disabled={isSubmitting} onClick={onCancel}>Hủy</Button>
-        <Button type="submit" isLoading={isSubmitting} leftIcon={<Save size={18} aria-hidden="true" />}>Lưu dữ liệu</Button>
+        <Button
+          type="button"
+          variant="secondary"
+          disabled={isSubmitting}
+          onClick={onCancel}
+        >
+          Hủy
+        </Button>
+        <Button
+          type="submit"
+          isLoading={isSubmitting}
+          leftIcon={<Save size={18} aria-hidden="true" />}
+        >
+          Lưu dữ liệu
+        </Button>
       </div>
     </form>
   );

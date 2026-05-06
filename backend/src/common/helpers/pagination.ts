@@ -3,9 +3,11 @@ export type PaginationInput = {
   limit?: number;
 };
 
+export const MAX_PAGE_SIZE = 500;
+
 export const getPagination = (query: PaginationInput) => {
   const page = Math.max(Number(query.page || 1), 1);
-  const limit = Math.min(Math.max(Number(query.limit || 10), 1), 100);
+  const limit = Math.min(Math.max(Number(query.limit || 10), 1), MAX_PAGE_SIZE);
   const skip = (page - 1) * limit;
 
   return { page, limit, skip };

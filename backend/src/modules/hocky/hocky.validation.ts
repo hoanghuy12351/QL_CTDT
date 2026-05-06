@@ -1,14 +1,13 @@
 import { z } from "zod";
 
 const nonEmptyText = (max = 255) => z.string().trim().min(1).max(max);
-const optionalDate = z.coerce.date().nullable().optional();
+const requiredDate = z.coerce.date();
 
 const hocKyBodySchema = z.object({
-  namHocId: z.coerce.number().int().positive(),
   maHocKy: nonEmptyText(20),
   tenHocKy: nonEmptyText(100),
-  ngayBatDau: optionalDate,
-  ngayKetThuc: optionalDate,
+  ngayBatDau: requiredDate,
+  ngayKetThuc: requiredDate,
   trangThai: z.enum(["du_thao", "dang_ap_dung", "da_dong"]).optional(),
 });
 

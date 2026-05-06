@@ -5,6 +5,7 @@ import {
   mapSemesterPlan,
   mapSemesterPlanForm,
   mapSuggestion,
+  mapTrainingPlanDetail,
   mapTrainingPlan,
   mapTrainingPlanForm,
 } from "../../features/training-plans/trainingPlan.mapper";
@@ -14,18 +15,19 @@ import type {
   SemesterPlanFormValues,
   SuggestionDto,
   TrainingPlanDto,
+  TrainingPlanDetail,
   TrainingPlanFormValues,
   TrainingPlanListResult,
+  SemesterPlanListResult,
 } from "../../features/training-plans/trainingPlan.types";
 
 const unwrap = <T>(response: ApiResponse<T>) => response.data;
 
 export const trainingPlansApi = {
   list: async (params: { page: number; limit: number; keyword?: string }) => {
-    const { data } = await axiosClient.get<ApiResponse<PaginatedResponse<TrainingPlanDto>>>(
-      "/admin/ke-hoach/dao-tao",
-      { params },
-    );
+    const { data } = await axiosClient.get<
+      ApiResponse<PaginatedResponse<TrainingPlanDto>>
+    >("/admin/ke-hoach/dao-tao", { params });
     const result = unwrap(data);
 
     return {
@@ -40,6 +42,13 @@ export const trainingPlansApi = {
       mapTrainingPlanForm(values),
     );
     return mapTrainingPlan(unwrap(data));
+  },
+
+  detail: async (id: number): Promise<TrainingPlanDetail> => {
+    const { data } = await axiosClient.get<ApiResponse<TrainingPlanDto>>(
+      `/admin/ke-hoach/dao-tao/${id}`,
+    );
+    return mapTrainingPlanDetail(unwrap(data));
   },
 
   update: async (id: number, values: TrainingPlanFormValues) => {
@@ -57,16 +66,43 @@ export const trainingPlansApi = {
     return mapTrainingPlan(unwrap(data));
   },
 
+  approve: async (id: number) => {
+    const { data } = await axiosClient.post<ApiResponse<TrainingPlanDto>>(
+      `/admin/ke-hoach/dao-tao/${id}/duyet`,
+    );
+    return mapTrainingPlan(unwrap(data));
+  },
+
+  start: async (id: number) => {
+    const { data } = await axiosClient.post<ApiResponse<TrainingPlanDto>>(
+      `/admin/ke-hoach/dao-tao/${id}/bat-dau`,
+    );
+    return mapTrainingPlan(unwrap(data));
+  },
+
+  reopen: async (id: number) => {
+    const { data } = await axiosClient.post<ApiResponse<TrainingPlanDto>>(
+      `/admin/ke-hoach/dao-tao/${id}/mo-lai`,
+    );
+    return mapTrainingPlan(unwrap(data));
+  },
+
+  close: async (id: number) => {
+    const { data } = await axiosClient.post<ApiResponse<TrainingPlanDto>>(
+      `/admin/ke-hoach/dao-tao/${id}/dong`,
+    );
+    return mapTrainingPlan(unwrap(data));
+  },
+
   listSemesterPlans: async (params: {
     page: number;
     limit: number;
     keyword?: string;
     keHoachId?: number;
-  }) => {
-    const { data } = await axiosClient.get<ApiResponse<PaginatedResponse<SemesterPlanDto>>>(
-      "/admin/ke-hoach/hoc-ky",
-      { params },
-    );
+  }): Promise<SemesterPlanListResult> => {
+    const { data } = await axiosClient.get<
+      ApiResponse<PaginatedResponse<SemesterPlanDto>>
+    >("/admin/ke-hoach/hoc-ky", { params });
     const result = unwrap(data);
 
     return {
@@ -79,6 +115,42 @@ export const trainingPlansApi = {
     const { data } = await axiosClient.post<ApiResponse<SemesterPlanDto>>(
       "/admin/ke-hoach/hoc-ky",
       mapSemesterPlanForm(values),
+    );
+    return mapSemesterPlan(unwrap(data));
+  },
+
+  detailSemesterPlan: async (id: number) => {
+    const { data } = await axiosClient.get<ApiResponse<SemesterPlanDto>>(
+      `/admin/ke-hoach/hoc-ky/${id}`,
+    );
+    return mapSemesterPlan(unwrap(data));
+  },
+
+  updateSemesterPlan: async (id: number, values: SemesterPlanFormValues) => {
+    const { data } = await axiosClient.put<ApiResponse<SemesterPlanDto>>(
+      `/admin/ke-hoach/hoc-ky/${id}`,
+      mapSemesterPlanForm(values),
+    );
+    return mapSemesterPlan(unwrap(data));
+  },
+
+  approveSemesterPlan: async (id: number) => {
+    const { data } = await axiosClient.post<ApiResponse<SemesterPlanDto>>(
+      `/admin/ke-hoach/hoc-ky/${id}/duyet`,
+    );
+    return mapSemesterPlan(unwrap(data));
+  },
+
+  reopenSemesterPlan: async (id: number) => {
+    const { data } = await axiosClient.post<ApiResponse<SemesterPlanDto>>(
+      `/admin/ke-hoach/hoc-ky/${id}/mo-lai`,
+    );
+    return mapSemesterPlan(unwrap(data));
+  },
+
+  closeSemesterPlan: async (id: number) => {
+    const { data } = await axiosClient.post<ApiResponse<SemesterPlanDto>>(
+      `/admin/ke-hoach/hoc-ky/${id}/dong`,
     );
     return mapSemesterPlan(unwrap(data));
   },

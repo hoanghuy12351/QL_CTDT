@@ -7,7 +7,6 @@ import { RequireAdmin } from "./guards/RequireAdmin";
 const LoginPage = lazy(() => import("../pages/auth/LoginPage"));
 const RegisterPage = lazy(() => import("../pages/auth/RegisterPage"));
 const DashboardPage = lazy(() => import("../pages/admin/DashboardPage"));
-const AdminModulePage = lazy(() => import("../pages/admin/AdminModulePage"));
 const FacultyPage = lazy(() => import("../features/faculties/FacultyPage"));
 const DepartmentPage = lazy(
   () => import("../features/departments/DepartmentPage"),
@@ -31,19 +30,34 @@ const SemesterPage = lazy(() => import("../features/semesters/SemesterPage"));
 const CurriculumPage = lazy(
   () => import("../features/curriculums/CurriculumPage"),
 );
-const TrainingPlanPage = lazy(
-  () => import("../features/training-plans/TrainingPlanPage"),
+const CurriculumDetailPage = lazy(
+  () => import("../features/curriculums/CurriculumDetailPage"),
+);
+const TrainingYearPlanPage = lazy(
+  () => import("../features/training-plans/TrainingYearPlanPage"),
+);
+const TrainingYearPlanDetailPage = lazy(
+  () => import("../features/training-plans/TrainingYearPlanDetailPage"),
+);
+const SemesterTrainingPlanPage = lazy(
+  () => import("../features/training-plans/SemesterTrainingPlanPage"),
 );
 const TeachingGroupPage = lazy(
   () => import("../features/teaching-groups/TeachingGroupPage"),
 );
-
+const TeachingAssignmentPage = lazy(
+  () => import("../features/teaching-assignments/TeachingAssignmentPage"),
+);
+const LecturerCoursePage = lazy(
+  () => import("../features/lecturer-courses/LecturerCoursePage"),
+);
+const ReportPage = lazy(() => import("../features/reports/ReportPage"));
 function page(element: ReactNode) {
   return (
     <Suspense
       fallback={
         <div className="flex min-h-[280px] items-center justify-center px-6 text-sm font-medium text-slate-500">
-          Dang tai du lieu...
+          Đang tải dữ liệu...
         </div>
       }
     >
@@ -51,91 +65,6 @@ function page(element: ReactNode) {
     </Suspense>
   );
 }
-const modulePages = {
-  curriculums: {
-    title: "Chuong trinh dao tao",
-    description:
-      "Quan ly CTDT theo nganh, chuyen nganh, khoa hoc, lop ap dung va danh sach hoc phan theo tung hoc ky.",
-    primaryAction: "Them CTDT",
-    actions: [
-      {
-        label: "Quan ly hoc phan trong CTDT",
-        helper:
-          "Gan hoc phan vao hoc ky du kien va tien do 1, tien do 2 hoac ca ky.",
-      },
-      {
-        label: "Gan CTDT cho lop",
-        helper:
-          "Moi lop co the ap dung mot CTDT de theo doi da hoc hoac chua hoc.",
-      },
-      {
-        label: "Theo doi tien do",
-        helper: "Biet hoc phan nao da hoc, dang hoc, chua hoc hoac tam hoan.",
-      },
-    ],
-  },
-  trainingPlans: {
-    title: "Ke hoach dao tao",
-    description:
-      "Lap ke hoach theo nam hoc, hoc ky, chon lop, goi y hoc phan can mo va tao ke hoach lop - hoc phan.",
-    primaryAction: "Lap ke hoach",
-    actions: [
-      {
-        label: "Chon nhieu lop",
-        helper: "He thong goi y hoc phan theo CTDT rieng cua tung lop.",
-      },
-      {
-        label: "Ma tran lop - hoc phan",
-        helper: "Chi lop nao co hoc phan trong CTDT moi duoc tick chon.",
-      },
-      {
-        label: "Quan ly tuan dao tao",
-        helper: "Nhap so tiet theo tuan, dung voi mau Excel hien tai.",
-      },
-    ],
-  },
-  assignments: {
-    title: "Phan cong giang day",
-    description:
-      "Quan ly nhom LT/TH, giang vien phu trach, so tiet phan cong, he so lop va lich day theo tuan.",
-    primaryAction: "Phan cong GV",
-    actions: [
-      {
-        label: "Tao nhom LT/TH",
-        helper: "Hoc phan co thuc hanh co the chia TH1, TH2 theo si so.",
-      },
-      {
-        label: "Phan cong theo nhom",
-        helper: "Moi nhom LT/TH co giang vien va so tiet phan cong rieng.",
-      },
-      {
-        label: "Nhap so tiet theo tuan",
-        helper: "Dam bao tong so tiet theo tuan bang so tiet phan cong.",
-      },
-    ],
-  },
-  reports: {
-    title: "Bao cao",
-    description:
-      "Xuat ke hoach dao tao theo lop, ke hoach giang day theo giang vien va bang tong hop theo hoc ky.",
-    primaryAction: "Xuat bao cao",
-    actions: [
-      {
-        label: "Bao cao theo lop",
-        helper: "Xem ky nay lop hoc nhung hoc phan nao va ai giang day.",
-      },
-      {
-        label: "Bao cao theo giang vien",
-        helper: "Thong ke giang vien day lop nao, mon nao, bao nhieu tiet.",
-      },
-      {
-        label: "Bao cao tong hop Excel",
-        helper: "Xuat bang tuan 1, tuan 2 va tong gio tuong tu file mau.",
-      },
-    ],
-  },
-};
-
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -165,12 +94,32 @@ export const router = createBrowserRouter([
         element: page(<CurriculumPage />),
       },
       {
+        path: "curriculums/:id",
+        element: page(<CurriculumDetailPage />),
+      },
+      {
         path: "training-plans",
-        element: page(<TrainingPlanPage />),
+        element: <Navigate to="/admin/training/plans/year" replace />,
       },
       {
         path: "training-plans/:id",
-        element: page(<TrainingPlanPage />),
+        element: page(<TrainingYearPlanDetailPage />),
+      },
+      {
+        path: "training/plans/year",
+        element: page(<TrainingYearPlanPage />),
+      },
+      {
+        path: "training/plans/year/:id",
+        element: page(<TrainingYearPlanDetailPage />),
+      },
+      {
+        path: "training/plans/semesters",
+        element: page(<SemesterTrainingPlanPage />),
+      },
+      {
+        path: "training/plans/semesters/:id",
+        element: page(<SemesterTrainingPlanPage />),
       },
       {
         path: "teaching-groups",
@@ -178,11 +127,11 @@ export const router = createBrowserRouter([
       },
       {
         path: "assignments",
-        element: page(<AdminModulePage {...modulePages.assignments} />),
+        element: page(<TeachingAssignmentPage />),
       },
       {
         path: "reports",
-        element: page(<AdminModulePage {...modulePages.reports} />),
+        element: page(<ReportPage />),
       },
       { path: "khoa", element: page(<FacultyPage />) },
       {
@@ -205,6 +154,10 @@ export const router = createBrowserRouter([
       {
         path: "chuyen-nganh",
         element: page(<SpecializationPage />),
+      },
+      {
+        path: "giang-vien-hoc-phan",
+        element: page(<LecturerCoursePage />),
       },
       {
         path: "giangvien",

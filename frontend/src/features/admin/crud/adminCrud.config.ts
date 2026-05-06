@@ -9,12 +9,16 @@ import {
 import type { AdminCrudConfig } from "./adminCrud.types";
 
 const subjectTypes = [
-  { label: "Dai cuong", value: "dai_cuong" },
-  { label: "Co so nganh", value: "co_so_nganh" },
-  { label: "Chuyen nganh", value: "chuyen_nganh" },
-  { label: "Do an", value: "do_an" },
+  { label: "Dai hoc thong thuong", value: "dai_hoc_thong_thuong" },
+  { label: "Thuc hanh", value: "thuc_hanh" },
+  { label: "Do an / Du an", value: "do_an_du_an" },
   { label: "Thuc tap", value: "thuc_tap" },
-  { label: "Tot nghiep", value: "tot_nghiep" },
+  {
+    label: "Do an / Khoa luan tot nghiep",
+    value: "do_an_khoa_luan_tot_nghiep",
+  },
+  { label: "Cao hoc", value: "cao_hoc" },
+  { label: "Huong dan luan van", value: "huong_dan_luan_van" },
   { label: "Khac", value: "khac" },
 ];
 

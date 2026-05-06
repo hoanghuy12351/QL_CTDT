@@ -18,11 +18,23 @@ import type {
 
 const unwrap = <T>(response: ApiResponse<T>) => response.data;
 
+const buildQueryString = (params: Record<string, unknown>) => {
+  const searchParams = new URLSearchParams();
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === "") return;
+    searchParams.append(key, String(value));
+  });
+
+  return searchParams.toString();
+};
+
 export const teachingGroupsApi = {
   listOpenedClassCourses: async (semesterPlanId: number) => {
     const { data } = await axiosClient.get<ApiResponse<OpenedClassCourseDto[]>>(
       `/admin/ke-hoach/hoc-ky/${semesterPlanId}/lop-hoc-phan`,
     );
+
     return unwrap(data).map(mapOpenedClassCourse);
   },
 
@@ -34,34 +46,57 @@ export const teachingGroupsApi = {
     lopId?: number;
     hocPhanId?: number;
     loaiNhom?: TeachingGroupType | "";
-  }) => {
-    const { data } = await axiosClient.get<ApiResponse<PaginatedResponse<TeachingGroupDto>>>(
-      "/admin/ke-hoach/nhom-hoc-phan",
-      { params },
-    );
+  }): Promise<TeachingGroupListResult> => {
+    const queryString = buildQueryString({
+      page: params.page,
+      limit: Math.min(params.limit, 500),
+      keyword: params.keyword?.trim() || undefined,
+      keHoachHocKyId: params.keHoachHocKyId,
+      lopId: params.lopId,
+      hocPhanId: params.hocPhanId,
+      loaiNhom: params.loaiNhom || undefined,
+    });
+
+    const url = queryString
+      ? `/admin/ke-hoach/nhom-hoc-phan?${queryString}`
+      : "/admin/ke-hoach/nhom-hoc-phan";
+
+    const { data } =
+      await axiosClient.get<ApiResponse<PaginatedResponse<TeachingGroupDto>>>(
+        url,
+      );
+
     const result = unwrap(data);
 
     return {
       pagination: result.pagination,
       items: result.items.map(mapTeachingGroup),
-    } satisfies TeachingGroupListResult;
+    };
   },
 
-  createGroup: async (classCoursePlanId: number, values: TeachingGroupFormValues) => {
+  createGroup: async (
+    classCoursePlanId: number,
+    values: TeachingGroupFormValues,
+  ) => {
     const { data } = await axiosClient.post<ApiResponse<TeachingGroupDto>>(
       `/admin/ke-hoach/lop-hoc-phan/${classCoursePlanId}/nhom`,
       mapTeachingGroupForm(values),
     );
+
     return mapTeachingGroup(unwrap(data));
   },
 
-  createQuickGroups: async (classCoursePlanId: number, values: QuickGroupFormValues) => {
+  createQuickGroups: async (
+    classCoursePlanId: number,
+    values: QuickGroupFormValues,
+  ) => {
     const { data } = await axiosClient.post<
       ApiResponse<{ nhomDaTao: TeachingGroupDto[]; goiYSoNhomThucHanh: number }>
     >(
       `/admin/ke-hoach/lop-hoc-phan/${classCoursePlanId}/tao-nhom-nhanh`,
       mapQuickGroupForm(values),
     );
+
     const result = unwrap(data);
 
     return {
@@ -75,6 +110,7 @@ export const teachingGroupsApi = {
       `/admin/ke-hoach/nhom-hoc-phan/${id}`,
       mapTeachingGroupUpdateForm(values),
     );
+
     return mapTeachingGroup(unwrap(data));
   },
 
@@ -82,6 +118,7 @@ export const teachingGroupsApi = {
     const { data } = await axiosClient.delete<ApiResponse<TeachingGroupDto>>(
       `/admin/ke-hoach/nhom-hoc-phan/${id}`,
     );
+
     return mapTeachingGroup(unwrap(data));
   },
 };

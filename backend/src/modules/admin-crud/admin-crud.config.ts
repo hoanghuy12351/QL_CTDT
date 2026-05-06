@@ -98,7 +98,6 @@ export const adminResourceConfigs: Record<string, AdminResourceConfig> = {
     idField: "hocKyId",
     searchFields: ["maHocKy", "tenHocKy", "trangThai"],
     defaultOrderBy: { hocKyId: "desc" },
-    include: { namHoc: true },
   },
   "chuong-trinh-dao-tao": {
     resource: "chuong-trinh-dao-tao",

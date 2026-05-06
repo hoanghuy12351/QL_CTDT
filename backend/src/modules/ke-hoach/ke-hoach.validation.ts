@@ -2,12 +2,7 @@ import { z } from "zod";
 
 const nonEmptyText = (max = 255) => z.string().trim().min(1).max(max);
 const nullableText = (max = 1000) =>
-  z
-    .string()
-    .trim()
-    .max(max)
-    .nullable()
-    .optional();
+  z.string().trim().max(max).nullable().optional();
 
 export const listQuerySchema = z.object({
   page: z.coerce.number().int().positive().optional(),
@@ -16,11 +11,30 @@ export const listQuerySchema = z.object({
   keHoachId: z.coerce.number().int().positive().optional(),
 });
 
-const groupTypeSchema = z.preprocess((value) => {
+const groupTypeValues = [
+  "ly_thuyet",
+  "thuc_hanh",
+  "do_an",
+  "thuc_tap",
+  "tot_nghiep",
+] as const;
+
+const normalizeGroupType = (value: unknown) => {
+  if (value === "" || value === undefined || value === null) return undefined;
   if (value === "LT") return "ly_thuyet";
   if (value === "TH") return "thuc_hanh";
   return value;
-}, z.enum(["ly_thuyet", "thuc_hanh", "do_an", "thuc_tap", "tot_nghiep"]));
+};
+
+const groupTypeSchema = z.preprocess(
+  normalizeGroupType,
+  z.enum(groupTypeValues),
+);
+
+const optionalGroupTypeQuerySchema = z.preprocess(
+  normalizeGroupType,
+  z.enum(groupTypeValues).optional(),
+);
 
 export const groupListQuerySchema = z.object({
   page: z.coerce.number().int().positive().optional(),
@@ -29,7 +43,7 @@ export const groupListQuerySchema = z.object({
   keHoachHocKyId: z.coerce.number().int().positive().optional(),
   lopId: z.coerce.number().int().positive().optional(),
   hocPhanId: z.coerce.number().int().positive().optional(),
-  loaiNhom: groupTypeSchema.optional(),
+  loaiNhom: optionalGroupTypeQuerySchema,
 });
 
 export const keHoachDaoTaoIdParamSchema = z.object({
@@ -45,7 +59,9 @@ const keHoachDaoTaoBodySchema = z.object({
   tenKeHoach: nonEmptyText(255),
   namHocId: z.coerce.number().int().positive(),
   khoaId: z.coerce.number().int().positive(),
-  trangThai: z.enum(["du_thao", "da_duyet", "dang_thuc_hien", "da_dong"]).optional(),
+  trangThai: z
+    .enum(["du_thao", "da_duyet", "dang_thuc_hien", "da_dong"])
+    .optional(),
   ghiChu: nullableText(2000),
 });
 
@@ -140,13 +156,84 @@ export const taoNhomNhanhSchema = z
   })
   .strict();
 
-export const phanCongSchema = z.object({
-  nhomHocPhanId: z.coerce.number().int().positive(),
-  giangVienId: z.coerce.number().int().positive(),
-  vaiTro: z.enum(["chinh", "tro_giang", "thuc_hanh", "huong_dan_do_an", "huong_dan_thuc_tap"]).default("chinh"),
-  heSoLop: z.coerce.number().min(0).default(1),
-  ghiChu: z.string().optional(),
+export const phanCongSchema = z
+  .object({
+    nhomHocPhanId: z.coerce.number().int().positive(),
+    giangVienId: z.coerce.number().int().positive(),
+    vaiTro: z
+      .enum([
+        "chinh",
+        "tro_giang",
+        "thuc_hanh",
+        "huong_dan_do_an",
+        "huong_dan_thuc_tap",
+      ])
+      .default("chinh"),
+    soTietPhanCong: z.coerce.number().min(0).optional(),
+    heSoLop: z.coerce.number().min(0).default(1),
+    trangThai: z
+      .enum(["du_thao", "da_phan_cong", "da_xac_nhan", "da_huy"])
+      .default("da_phan_cong"),
+    ghiChu: z.string().trim().max(2000).optional(),
+  })
+  .strict();
+
+const assignmentRoleValues = [
+  "chinh",
+  "tro_giang",
+  "thuc_hanh",
+  "huong_dan_do_an",
+  "huong_dan_thuc_tap",
+] as const;
+
+const assignmentStatusValues = [
+  "du_thao",
+  "da_phan_cong",
+  "da_xac_nhan",
+  "da_huy",
+] as const;
+
+const emptyToUndefined = (value: unknown) => {
+  if (value === "" || value === undefined || value === null) return undefined;
+  return value;
+};
+
+const optionalAssignmentRoleQuerySchema = z.preprocess(
+  emptyToUndefined,
+  z.enum(assignmentRoleValues).optional(),
+);
+
+const optionalAssignmentStatusQuerySchema = z.preprocess(
+  emptyToUndefined,
+  z.enum(assignmentStatusValues).optional(),
+);
+
+export const assignmentListQuerySchema = z.object({
+  page: z.coerce.number().int().positive().optional(),
+  limit: z.coerce.number().int().positive().optional(),
+  keyword: z.string().trim().optional(),
+  keHoachHocKyId: z.coerce.number().int().positive().optional(),
+  lopId: z.coerce.number().int().positive().optional(),
+  hocPhanId: z.coerce.number().int().positive().optional(),
+  giangVienId: z.coerce.number().int().positive().optional(),
+  nhomHocPhanId: z.coerce.number().int().positive().optional(),
+  vaiTro: optionalAssignmentRoleQuerySchema,
+  trangThai: optionalAssignmentStatusQuerySchema,
 });
+
+export const updatePhanCongSchema = z
+  .object({
+    giangVienId: z.coerce.number().int().positive().optional(),
+    vaiTro: z.enum(assignmentRoleValues).optional(),
+    soTietPhanCong: z.coerce.number().min(0).optional(),
+    heSoLop: z.coerce.number().min(0).optional(),
+    trangThai: z.enum(assignmentStatusValues).optional(),
+    ghiChu: z.string().trim().max(2000).optional(),
+  })
+  .strict()
+  .refine((data) => Object.keys(data).length > 0, {
+    message: "Can it nhat mot truong de cap nhat",
+  });
 
 export const lichTuanItemSchema = z.object({
   tuanId: z.coerce.number().int().positive(),
@@ -159,6 +246,10 @@ export const lichTuanItemSchema = z.object({
 export const capNhatLichTuanSchema = z.object({
   phanCongId: z.coerce.number().int().positive(),
   lich: z.array(lichTuanItemSchema).min(1),
+});
+
+export const baoCaoHocKyQuerySchema = z.object({
+  keHoachHocKyId: z.coerce.number().int().positive(),
 });
 
 export const baoCaoTheoLopQuerySchema = z.object({
@@ -175,14 +266,23 @@ export type GoiYHocPhanInput = z.infer<typeof goiYHocPhanSchema>;
 export type MoHocPhanInput = z.infer<typeof moHocPhanSchema>;
 export type TaoNhomInput = z.infer<typeof taoNhomSchema>;
 export type PhanCongInput = z.infer<typeof phanCongSchema>;
+export type AssignmentListQuery = z.infer<typeof assignmentListQuerySchema>;
+export type UpdatePhanCongInput = z.infer<typeof updatePhanCongSchema>;
 export type CapNhatLichTuanInput = z.infer<typeof capNhatLichTuanSchema>;
+export type BaoCaoHocKyQuery = z.infer<typeof baoCaoHocKyQuerySchema>;
 export type BaoCaoTheoLopQuery = z.infer<typeof baoCaoTheoLopQuerySchema>;
-export type BaoCaoTheoGiangVienQuery = z.infer<typeof baoCaoTheoGiangVienQuerySchema>;
+export type BaoCaoTheoGiangVienQuery = z.infer<
+  typeof baoCaoTheoGiangVienQuerySchema
+>;
 export type ListQuery = z.infer<typeof listQuerySchema>;
 export type KeHoachDaoTaoIdParam = z.infer<typeof keHoachDaoTaoIdParamSchema>;
 export type KeHoachHocKyIdParam = z.infer<typeof keHoachHocKyIdParamSchema>;
-export type CreateKeHoachDaoTaoInput = z.infer<typeof createKeHoachDaoTaoSchema>;
-export type UpdateKeHoachDaoTaoInput = z.infer<typeof updateKeHoachDaoTaoSchema>;
+export type CreateKeHoachDaoTaoInput = z.infer<
+  typeof createKeHoachDaoTaoSchema
+>;
+export type UpdateKeHoachDaoTaoInput = z.infer<
+  typeof updateKeHoachDaoTaoSchema
+>;
 export type CreateKeHoachHocKyInput = z.infer<typeof createKeHoachHocKySchema>;
 export type UpdateKeHoachHocKyInput = z.infer<typeof updateKeHoachHocKySchema>;
 export type GroupListQuery = z.infer<typeof groupListQuerySchema>;

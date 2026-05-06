@@ -1,5 +1,4 @@
 import { Edit3, Trash2 } from "lucide-react";
-import { formatDate } from "../../lib/format";
 import IconButton from "../../components/ui/IconButton";
 import TableSkeleton from "../../components/ui/TableSkeleton";
 import { semesterColumns } from "./semester.columns";
@@ -30,6 +29,20 @@ const statusClassMap: Record<string, string> = {
   da_dong: "bg-amber-50 text-amber-700",
 };
 
+const formatDayMonth = (value: string | null) => {
+  if (!value) return "-";
+
+  const isoMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) return `${isoMatch[3]}/${isoMatch[2]}`;
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+
+  return `${String(date.getUTCDate()).padStart(2, "0")}/${String(
+    date.getUTCMonth() + 1,
+  ).padStart(2, "0")}`;
+};
+
 export default function SemesterTable({
   deletingId,
   isLoading = false,
@@ -56,7 +69,7 @@ export default function SemesterTable({
           isLoading ? "hidden" : "",
         ].join(" ")}
       >
-        <table className="w-full min-w-[1180px] table-fixed border-collapse text-left text-sm">
+        <table className="w-full min-w-[920px] table-fixed border-collapse text-left text-sm">
           <thead className="sticky top-0 z-10 bg-slate-50 text-xs uppercase text-slate-600">
             <tr>
               <th className="w-12 border-b border-slate-200 px-3 py-3 text-center">
@@ -117,14 +130,11 @@ export default function SemesterTable({
                       {semester.name}
                     </span>
                   </td>
-                  <td className="px-3 py-3 text-slate-700">
-                    {semester.schoolYearCode}
+                  <td className="px-3 py-3 text-slate-600">
+                    {formatDayMonth(semester.startDate)}
                   </td>
                   <td className="px-3 py-3 text-slate-600">
-                    {semester.startDate ? formatDate(semester.startDate) : "-"}
-                  </td>
-                  <td className="px-3 py-3 text-slate-600">
-                    {semester.endDate ? formatDate(semester.endDate) : "-"}
+                    {formatDayMonth(semester.endDate)}
                   </td>
                   <td className="px-3 py-3">
                     {statusKey ? (

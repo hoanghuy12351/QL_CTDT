@@ -1,15 +1,15 @@
 import { Edit3, Trash2 } from "lucide-react";
 import IconButton from "../../components/ui/IconButton";
 import TableSkeleton from "../../components/ui/TableSkeleton";
-import { curriculumCourseColumns, progressLabels } from "./curriculum.columns";
+import { curriculumCourseColumns } from "./curriculum.columns";
 import type { CurriculumCourse } from "./curriculum.types";
 
 type CurriculumCourseTableProps = {
   rows: CurriculumCourse[];
   isLoading?: boolean;
   deletingId?: number | null;
-  onEdit: (course: CurriculumCourse) => void;
-  onDelete: (course: CurriculumCourse) => void;
+  onEdit?: (course: CurriculumCourse) => void;
+  onDelete?: (course: CurriculumCourse) => void;
 };
 
 export default function CurriculumCourseTable({
@@ -19,78 +19,98 @@ export default function CurriculumCourseTable({
   onEdit,
   rows,
 }: CurriculumCourseTableProps) {
+  const showActions = Boolean(onEdit && onDelete);
+
   return (
     <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
-      {isLoading ? <TableSkeleton columns={curriculumCourseColumns.length} rows={5} /> : null}
-      <div className={["overflow-auto", isLoading ? "hidden" : ""].join(" ")}>
-        <table className="w-full min-w-[760px] table-fixed text-left text-sm">
-          <thead className="bg-slate-50 text-xs uppercase text-slate-600">
+      {isLoading ? (
+        <TableSkeleton
+          columns={curriculumCourseColumns.length + (showActions ? 1 : 0)}
+          rows={5}
+        />
+      ) : null}
+      <div className={["max-h-[calc(100vh-360px)] min-h-[280px] overflow-auto", isLoading ? "hidden" : ""].join(" ")}>
+        <table className="w-full min-w-[1180px] table-fixed border-collapse text-left text-sm">
+          <thead className="sticky top-0 z-10 bg-slate-50 text-xs uppercase text-slate-600">
             <tr>
               {curriculumCourseColumns.map((column) => (
                 <th
                   key={column.key}
                   className={[
                     "border-b border-slate-200 px-3 py-3 font-semibold",
+                    column.key === "index" ? "w-16 text-center" : "",
                     column.key === "semester" ? "w-24 text-center" : "",
-                    column.key === "credits" ? "w-16 text-center" : "",
-                    column.key === "progress" ? "w-28" : "",
-                    column.key === "required" ? "w-28" : "",
-                    column.key === "actions" ? "w-24 text-center" : "",
+                    column.key === "code" ? "w-36" : "",
+                    column.key === "credits" ? "w-24 text-center" : "",
+                    column.key === "theoryHours" ? "w-28 text-center" : "",
+                    column.key === "practiceHours" ? "w-36 text-center" : "",
+                    column.key === "totalHours" ? "w-32 text-center" : "",
+                    column.key === "type" ? "w-32" : "",
                   ].join(" ")}
                 >
                   {column.label}
                 </th>
               ))}
+              {showActions ? (
+                <th className="sticky right-0 w-28 border-b border-slate-200 bg-slate-50 px-3 py-3 text-center font-semibold">
+                  Thao tác
+                </th>
+              ) : null}
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {rows.map((course) => (
+            {rows.map((course, index) => (
               <tr key={course.id} className="bg-white transition hover:bg-slate-50">
+                <td className="px-3 py-3 text-center text-slate-500">
+                  {index + 1}
+                </td>
                 <td className="px-3 py-3 text-center font-semibold text-slate-800">
                   {course.semester}
+                </td>
+                <td className="px-3 py-3">
+                  <span className="inline-flex max-w-full rounded-md bg-slate-100 px-2 py-1 font-semibold text-slate-900">
+                    <span className="truncate">{course.courseCode || "-"}</span>
+                  </span>
                 </td>
                 <td className="px-3 py-3">
                   <span className="block truncate font-semibold text-slate-950">
                     {course.courseName}
                   </span>
-                  <span className="mt-1 block truncate text-xs text-slate-500">
-                    {course.courseCode || "-"} · {course.courseType}
-                  </span>
                 </td>
                 <td className="px-3 py-3 text-center text-slate-700">{course.credits}</td>
-                <td className="px-3 py-3 text-slate-700">{progressLabels[course.progress]}</td>
+                <td className="px-3 py-3 text-center text-slate-700">{course.theoryHours}</td>
+                <td className="px-3 py-3 text-center text-slate-700">{course.practiceHours}</td>
+                <td className="px-3 py-3 text-center font-semibold text-slate-800">{course.totalHours}</td>
                 <td className="px-3 py-3">
-                  <span
-                    className={[
-                      "inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ring-1",
-                      course.required
-                        ? "bg-emerald-50 text-emerald-700 ring-emerald-100"
-                        : "bg-sky-50 text-sky-700 ring-sky-100",
-                    ].join(" ")}
-                  >
-                    {course.required ? "Bắt buộc" : "Tự chọn"}
+                  <span className="inline-flex max-w-full rounded-md bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
+                    <span className="truncate">{course.courseType}</span>
                   </span>
                 </td>
-                <td className="px-3 py-2">
-                  <div className="flex justify-center gap-1">
-                    <IconButton label={`Sửa ${course.courseName}`} onClick={() => onEdit(course)}>
-                      <Edit3 size={16} aria-hidden="true" />
-                    </IconButton>
-                    <IconButton
-                      label={`Xóa ${course.courseName}`}
-                      variant="danger"
-                      disabled={deletingId === course.id}
-                      onClick={() => onDelete(course)}
-                    >
-                      <Trash2 size={16} aria-hidden="true" />
-                    </IconButton>
-                  </div>
-                </td>
+                {showActions ? (
+                  <td className="sticky right-0 bg-white px-3 py-2 shadow-[-10px_0_18px_-18px_rgba(15,23,42,0.5)]">
+                    <div className="flex justify-center gap-1">
+                      <IconButton label={`Sửa ${course.courseName}`} onClick={() => onEdit?.(course)}>
+                        <Edit3 size={16} aria-hidden="true" />
+                      </IconButton>
+                      <IconButton
+                        label={`Xóa ${course.courseName}`}
+                        variant="danger"
+                        disabled={deletingId === course.id}
+                        onClick={() => onDelete?.(course)}
+                      >
+                        <Trash2 size={16} aria-hidden="true" />
+                      </IconButton>
+                    </div>
+                  </td>
+                ) : null}
               </tr>
             ))}
             {rows.length === 0 && !isLoading ? (
               <tr>
-                <td className="px-3 py-8 text-center text-sm text-slate-500" colSpan={curriculumCourseColumns.length}>
+                <td
+                  className="px-3 py-8 text-center text-sm text-slate-500"
+                  colSpan={curriculumCourseColumns.length + (showActions ? 1 : 0)}
+                >
                   Chưa có học phần trong chương trình này.
                 </td>
               </tr>

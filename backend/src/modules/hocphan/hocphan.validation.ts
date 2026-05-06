@@ -1,12 +1,14 @@
 import { z } from "zod";
+import { MAX_PAGE_SIZE } from "../../common/helpers/pagination.js";
 
 const loaiHocPhanSchema = z.enum([
-  "dai_cuong",
-  "co_so_nganh",
-  "chuyen_nganh",
-  "do_an",
+  "dai_hoc_thong_thuong",
+  "thuc_hanh",
+  "do_an_du_an",
   "thuc_tap",
-  "tot_nghiep",
+  "do_an_khoa_luan_tot_nghiep",
+  "cao_hoc",
+  "huong_dan_luan_van",
   "khac",
 ]);
 
@@ -24,7 +26,7 @@ const baseHocPhanSchema = z.object({
 
 export const listHocPhanQuerySchema = z.object({
   page: z.coerce.number().int().min(1).optional(),
-  limit: z.coerce.number().int().min(1).max(100).optional(),
+  limit: z.coerce.number().int().min(1).max(MAX_PAGE_SIZE).optional(),
   keyword: z.string().trim().optional(),
 });
 
@@ -42,4 +44,3 @@ export const updateHocPhanSchema = baseHocPhanSchema.partial().refine(
 export type HocPhanListQuery = z.infer<typeof listHocPhanQuerySchema>;
 export type HocPhanCreateInput = z.infer<typeof createHocPhanSchema>;
 export type HocPhanUpdateInput = z.infer<typeof updateHocPhanSchema>;
-

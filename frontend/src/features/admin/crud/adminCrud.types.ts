@@ -6,6 +6,7 @@ export type AdminFieldType =
   | "email"
   | "textarea"
   | "select"
+  | "checkbox"
   | "date"
   | "month";
 

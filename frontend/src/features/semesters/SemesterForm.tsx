@@ -3,12 +3,10 @@ import { Save } from "lucide-react";
 import Button from "../../components/ui/Button";
 import SelectInput from "../../components/ui/SelectInput";
 import TextInput from "../../components/ui/TextInput";
-import type { AdminSelectOption } from "../admin/crud/adminCrud.types";
 import type { Semester, SemesterFormValues } from "./semester.types";
 
 type SemesterFormProps = {
   initialData?: Semester | null;
-  schoolYearOptions: AdminSelectOption[];
   isSubmitting?: boolean;
   onCancel: () => void;
   onSubmit: (values: SemesterFormValues) => void;
@@ -17,7 +15,6 @@ type SemesterFormProps = {
 type SemesterFormErrors = Partial<Record<keyof SemesterFormValues, string>>;
 
 const emptyValues: SemesterFormValues = {
-  schoolYearId: "",
   code: "",
   name: "",
   startDate: "",
@@ -31,16 +28,59 @@ const statusOptions = [
   { label: "Đã đóng", value: "da_dong" },
 ];
 
-const toDateInputValue = (value: string | null) => value?.slice(0, 10) ?? "";
+const toDayMonthInputValue = (value: string | null) => {
+  if (!value) return "";
+
+  const isoMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) return `${isoMatch[3]}/${isoMatch[2]}`;
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  return `${String(date.getUTCDate()).padStart(2, "0")}/${String(
+    date.getUTCMonth() + 1,
+  ).padStart(2, "0")}`;
+};
+
+const isValidDayMonth = (value: string) => {
+  const match = value.trim().match(/^(\d{1,2})\/(\d{1,2})$/);
+  if (!match) return false;
+
+  const day = Number(match[1]);
+  const month = Number(match[2]);
+  const date = new Date(Date.UTC(2000, month - 1, day));
+
+  return (
+    date.getUTCFullYear() === 2000 &&
+    date.getUTCMonth() === month - 1 &&
+    date.getUTCDate() === day
+  );
+};
+
+const normalizeDayMonth = (value: string) => {
+  const match = value.trim().match(/^(\d{1,2})\/(\d{1,2})$/);
+  if (!match) return value.trim();
+  return `${String(Number(match[1])).padStart(2, "0")}/${String(
+    Number(match[2]),
+  ).padStart(2, "0")}`;
+};
 
 const validateSemesterForm = (values: SemesterFormValues) => {
   const errors: SemesterFormErrors = {};
 
-  if (!values.schoolYearId) errors.schoolYearId = "Năm học là bắt buộc";
   if (!values.code.trim()) errors.code = "Mã học kỳ là bắt buộc";
   if (!values.name.trim()) errors.name = "Tên học kỳ là bắt buộc";
-  if (values.startDate && values.endDate && values.startDate > values.endDate) {
-    errors.endDate = "Ngày kết thúc phải sau ngày bắt đầu";
+
+  if (!values.startDate.trim()) {
+    errors.startDate = "Ngày bắt đầu là bắt buộc";
+  } else if (!isValidDayMonth(values.startDate)) {
+    errors.startDate = "Ngày bắt đầu phải có dạng ngày/tháng, ví dụ 01/09";
+  }
+
+  if (!values.endDate.trim()) {
+    errors.endDate = "Ngày kết thúc là bắt buộc";
+  } else if (!isValidDayMonth(values.endDate)) {
+    errors.endDate = "Ngày kết thúc phải có dạng ngày/tháng, ví dụ 15/01";
   }
 
   return errors;
@@ -51,17 +91,15 @@ export default function SemesterForm({
   isSubmitting = false,
   onCancel,
   onSubmit,
-  schoolYearOptions,
 }: SemesterFormProps) {
   const initialValues = useMemo<SemesterFormValues>(() => {
     if (!initialData) return emptyValues;
 
     return {
-      schoolYearId: String(initialData.schoolYearId),
       code: initialData.code,
       name: initialData.name,
-      startDate: toDateInputValue(initialData.startDate),
-      endDate: toDateInputValue(initialData.endDate),
+      startDate: toDayMonthInputValue(initialData.startDate),
+      endDate: toDayMonthInputValue(initialData.endDate),
       status: initialData.status ?? "",
     };
   }, [initialData]);
@@ -88,41 +126,21 @@ export default function SemesterForm({
     }
 
     onSubmit({
-      schoolYearId: values.schoolYearId,
       code: values.code.trim(),
       name: values.name.trim(),
-      startDate: values.startDate,
-      endDate: values.endDate,
+      startDate: normalizeDayMonth(values.startDate),
+      endDate: normalizeDayMonth(values.endDate),
       status: values.status,
     });
   };
 
   return (
     <form className="space-y-6" onSubmit={handleSubmit}>
+      <div className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+        Học kỳ chỉ lưu mốc ngày/tháng mẫu. Năm học thực tế sẽ lấy theo kế hoạch đào tạo.
+      </div>
+
       <div className="grid gap-x-6 gap-y-5 md:grid-cols-2">
-        <SelectInput
-          disabled={isSubmitting}
-          error={errors.schoolYearId}
-          label="Năm học"
-          name="schoolYearId"
-          placeholder="Chọn năm học"
-          required
-          options={schoolYearOptions}
-          value={values.schoolYearId}
-          onChange={(event) => setFieldValue("schoolYearId", event.target.value)}
-        />
-
-        <SelectInput
-          disabled={isSubmitting}
-          error={errors.status}
-          label="Trạng thái"
-          name="status"
-          placeholder="Chọn trạng thái"
-          options={statusOptions}
-          value={values.status}
-          onChange={(event) => setFieldValue("status", event.target.value)}
-        />
-
         <TextInput
           disabled={isSubmitting}
           error={errors.code}
@@ -146,9 +164,9 @@ export default function SemesterForm({
         <TextInput
           disabled={isSubmitting}
           error={errors.startDate}
-          label="Ngày bắt đầu"
+          label="Ngày bắt đầu *"
           name="startDate"
-          type="date"
+          placeholder="VD: 01/09"
           value={values.startDate}
           onChange={(event) => setFieldValue("startDate", event.target.value)}
         />
@@ -156,11 +174,22 @@ export default function SemesterForm({
         <TextInput
           disabled={isSubmitting}
           error={errors.endDate}
-          label="Ngày kết thúc"
+          label="Ngày kết thúc *"
           name="endDate"
-          type="date"
+          placeholder="VD: 15/01"
           value={values.endDate}
           onChange={(event) => setFieldValue("endDate", event.target.value)}
+        />
+
+        <SelectInput
+          disabled={isSubmitting}
+          error={errors.status}
+          label="Trạng thái"
+          name="status"
+          placeholder="Chọn trạng thái"
+          options={statusOptions}
+          value={values.status}
+          onChange={(event) => setFieldValue("status", event.target.value)}
         />
       </div>
 

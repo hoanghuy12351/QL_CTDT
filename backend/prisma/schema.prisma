@@ -187,7 +187,7 @@ model hocPhan {
   soTietLyThuyet Int                 @default(0) @map("so_tiet_ly_thuyet")
   soTietThucHanh Int                 @default(0) @map("so_tiet_thuc_hanh")
   tongSoTiet     Int                 @default(0) @map("tong_so_tiet")
-  loaiHocPhan    hocPhanLoaiHocPhan? @default(chuyen_nganh) @map("loai_hoc_phan")
+  loaiHocPhan    hocPhanLoaiHocPhan? @default(dai_hoc_thong_thuong) @map("loai_hoc_phan")
   boMonId        Int?                @map("bo_mon_id")
   moTa           String?             @map("mo_ta") @db.Text
   ngayTao        DateTime?           @default(now()) @map("ngay_tao") @db.DateTime(0)
@@ -227,7 +227,6 @@ model namHoc {
   trangThai   namHocTrangThai? @default(du_thao) @map("trang_thai")
   ngayTao     DateTime?        @default(now()) @map("ngay_tao") @db.DateTime(0)
 
-  hocKy            hocKy[]
   keHoachDaoTao    keHoachDaoTao[]
   tienDoHocPhanLop tienDoHocPhanLop[]
 
@@ -235,19 +234,17 @@ model namHoc {
 }
 
 model hocKy {
-  hocKyId     Int             @id @default(autoincrement()) @map("hoc_ky_id")
-  namHocId    Int             @map("nam_hoc_id")
+    hocKyId     Int             @id @default(autoincrement()) @map("hoc_ky_id")
   maHocKy     String          @map("ma_hoc_ky") @db.VarChar(20)
   tenHocKy    String          @map("ten_hoc_ky") @db.VarChar(100)
   ngayBatDau  DateTime?       @map("ngay_bat_dau") @db.Date
   ngayKetThuc DateTime?       @map("ngay_ket_thuc") @db.Date
   trangThai   hocKyTrangThai? @default(du_thao) @map("trang_thai")
 
-  namHoc           namHoc             @relation(fields: [namHocId], references: [namHocId], map: "fk_hoc_ky_nam_hoc")
   keHoachHocKy     keHoachHocKy[]
   tienDoHocPhanLop tienDoHocPhanLop[]
 
-  @@unique([namHocId, maHocKy], map: "uq_hoc_ky_trong_nam")
+    @@unique([maHocKy], map: "uq_hoc_ky_ma")
   @@map("hoc_ky")
 }
 
@@ -620,12 +617,13 @@ enum tuanDaoTaoLoaiTuan {
 }
 
 enum hocPhanLoaiHocPhan {
-  dai_cuong
-  co_so_nganh
-  chuyen_nganh
-  do_an
+  dai_hoc_thong_thuong
+  thuc_hanh
+  do_an_du_an
   thuc_tap
-  tot_nghiep
+  do_an_khoa_luan_tot_nghiep
+  cao_hoc
+  huong_dan_luan_van
   khac
 
   @@map("hoc_phan_loai_hoc_phan")

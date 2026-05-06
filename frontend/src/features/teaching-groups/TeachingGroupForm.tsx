@@ -4,7 +4,11 @@ import Button from "../../components/ui/Button";
 import SelectInput from "../../components/ui/SelectInput";
 import TextareaInput from "../../components/ui/TextareaInput";
 import TextInput from "../../components/ui/TextInput";
-import type { OpenedClassCourse, TeachingGroup, TeachingGroupFormValues } from "./teachingGroup.types";
+import type {
+  OpenedClassCourse,
+  TeachingGroup,
+  TeachingGroupFormValues,
+} from "./teachingGroup.types";
 
 type TeachingGroupFormProps = {
   classCourse?: OpenedClassCourse | null;
@@ -50,8 +54,11 @@ export default function TeachingGroupForm({
     () => buildInitialValues(classCourse, initialData),
     [classCourse, initialData],
   );
+
   const [values, setValues] = useState(initialValues);
-  const [errors, setErrors] = useState<Partial<Record<keyof TeachingGroupFormValues, string>>>({});
+  const [errors, setErrors] = useState<
+    Partial<Record<keyof TeachingGroupFormValues, string>>
+  >({});
 
   useEffect(() => {
     setValues(initialValues);
@@ -72,6 +79,7 @@ export default function TeachingGroupForm({
         name: current.name === "Lý thuyết" ? "Thực hành 1" : current.name,
         periods: String(classCourse?.practicePeriods ?? current.periods),
       }));
+
       return;
     }
 
@@ -86,11 +94,25 @@ export default function TeachingGroupForm({
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const nextErrors: typeof errors = {};
 
-    if (!values.name.trim()) nextErrors.name = "Tên nhóm là bắt buộc";
-    if (!values.classSize || Number(values.classSize) < 0) nextErrors.classSize = "Sĩ số không hợp lệ";
-    if (!values.periods || Number(values.periods) < 0) nextErrors.periods = "Số tiết không hợp lệ";
+    const nextErrors: Partial<Record<keyof TeachingGroupFormValues, string>> =
+      {};
+
+    if (!values.name.trim()) {
+      nextErrors.name = "Tên nhóm là bắt buộc";
+    }
+
+    if (values.classSize === "" || Number(values.classSize) < 0) {
+      nextErrors.classSize = "Sĩ số không hợp lệ";
+    }
+
+    if (values.periods === "" || Number(values.periods) < 0) {
+      nextErrors.periods = "Số tiết không hợp lệ";
+    }
+
+    if (!initialData && !classCourse) {
+      nextErrors.name = "Chưa chọn lớp - học phần";
+    }
 
     if (Object.keys(nextErrors).length > 0) {
       setErrors(nextErrors);
@@ -109,7 +131,9 @@ export default function TeachingGroupForm({
     <form className="space-y-6" onSubmit={handleSubmit}>
       {classCourse ? (
         <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-          <span className="font-semibold text-slate-900">{classCourse.classCode}</span>
+          <span className="font-semibold text-slate-900">
+            {classCourse.classCode || classCourse.className}
+          </span>
           <span className="mx-2 text-slate-300">/</span>
           <span>{classCourse.courseName}</span>
         </div>
@@ -126,17 +150,65 @@ export default function TeachingGroupForm({
           value={values.type}
           onChange={(event) => handleTypeChange(event.target.value)}
         />
-        <TextInput label="Mã nhóm" disabled={isSubmitting} value={values.code} onChange={(event) => setField("code", event.target.value)} />
-        <TextInput label="Tên nhóm *" error={errors.name} disabled={isSubmitting} value={values.name} onChange={(event) => setField("name", event.target.value)} />
-        <TextInput label="Sĩ số dự kiến *" error={errors.classSize} min={0} type="number" disabled={isSubmitting} value={values.classSize} onChange={(event) => setField("classSize", event.target.value)} />
-        <TextInput label="Số tiết *" error={errors.periods} min={0} type="number" disabled={isSubmitting} value={values.periods} onChange={(event) => setField("periods", event.target.value)} />
+
+        <TextInput
+          label="Mã nhóm"
+          disabled={isSubmitting}
+          value={values.code}
+          onChange={(event) => setField("code", event.target.value)}
+        />
+
+        <TextInput
+          label="Tên nhóm *"
+          error={errors.name}
+          disabled={isSubmitting}
+          value={values.name}
+          onChange={(event) => setField("name", event.target.value)}
+        />
+
+        <TextInput
+          label="Sĩ số dự kiến *"
+          error={errors.classSize}
+          min={0}
+          type="number"
+          disabled={isSubmitting}
+          value={values.classSize}
+          onChange={(event) => setField("classSize", event.target.value)}
+        />
+
+        <TextInput
+          label="Số tiết *"
+          error={errors.periods}
+          min={0}
+          type="number"
+          disabled={isSubmitting}
+          value={values.periods}
+          onChange={(event) => setField("periods", event.target.value)}
+        />
       </div>
 
-      <TextareaInput label="Ghi chú" disabled={isSubmitting} value={values.note} onChange={(event) => setField("note", event.target.value)} />
+      <TextareaInput
+        label="Ghi chú"
+        disabled={isSubmitting}
+        value={values.note}
+        onChange={(event) => setField("note", event.target.value)}
+      />
 
       <div className="flex flex-col-reverse gap-3 pt-3 sm:flex-row sm:justify-end">
-        <Button type="button" variant="secondary" disabled={isSubmitting} onClick={onCancel}>Hủy</Button>
-        <Button type="submit" isLoading={isSubmitting} leftIcon={<Save size={18} aria-hidden="true" />}>
+        <Button
+          type="button"
+          variant="secondary"
+          disabled={isSubmitting}
+          onClick={onCancel}
+        >
+          Hủy
+        </Button>
+
+        <Button
+          type="submit"
+          isLoading={isSubmitting}
+          leftIcon={<Save size={18} aria-hidden="true" />}
+        >
           Lưu nhóm
         </Button>
       </div>

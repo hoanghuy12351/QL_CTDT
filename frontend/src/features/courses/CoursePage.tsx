@@ -7,12 +7,16 @@ import { buildSelectOptions } from "../admin/crud/adminCrudPage.utils";
 import type { AdminCrudConfig } from "../admin/crud/adminCrud.types";
 
 const subjectTypeOptions = [
-  { label: "Đại cương", value: "dai_cuong" },
-  { label: "Cơ sở ngành", value: "co_so_nganh" },
-  { label: "Chuyên ngành", value: "chuyen_nganh" },
-  { label: "Đồ án", value: "do_an" },
+  { label: "Đại học thông thường", value: "dai_hoc_thong_thuong" },
+  { label: "Thực hành", value: "thuc_hanh" },
+  { label: "Đồ án / Dự án", value: "do_an_du_an" },
   { label: "Thực tập", value: "thuc_tap" },
-  { label: "Tốt nghiệp", value: "tot_nghiep" },
+  {
+    label: "Đồ án / Khóa luận tốt nghiệp",
+    value: "do_an_khoa_luan_tot_nghiep",
+  },
+  { label: "Cao học", value: "cao_hoc" },
+  { label: "Hướng dẫn luận văn", value: "huong_dan_luan_van" },
   { label: "Khác", value: "khac" },
 ];
 
@@ -108,7 +112,7 @@ export default function CoursePage() {
         { key: "soTinChi", label: "Tín chỉ" },
         { key: "tongSoTiet", label: "Tổng tiết" },
         { key: "boMon.tenBoMon", label: "Bộ môn", fallback: "-" },
-        { key: "loaiHocPhan", label: "Loại", fallback: "-" },
+        { key: "loaiHocPhanLabel", label: "Loại", fallback: "-" },
       ],
     }),
     [departmentOptions],

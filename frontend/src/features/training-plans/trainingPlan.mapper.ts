@@ -6,6 +6,7 @@ import type {
   SemesterPlanFormValues,
   SuggestionMatrix,
   SuggestionDto,
+  TrainingPlanDetail,
   TrainingPlan,
   TrainingPlanDto,
   TrainingPlanFormValues,
@@ -25,6 +26,13 @@ export function mapTrainingPlan(dto: TrainingPlanDto): TrainingPlan {
     status: dto.trangThai ?? "du_thao",
     note: text(dto.ghiChu),
     semesterCount: dto._count?.keHoachHocKy ?? dto.keHoachHocKy?.length ?? 0,
+  };
+}
+
+export function mapTrainingPlanDetail(dto: TrainingPlanDto): TrainingPlanDetail {
+  return {
+    plan: mapTrainingPlan(dto),
+    semesterPlans: (dto.keHoachHocKy ?? []).map(mapSemesterPlan),
   };
 }
 
@@ -108,7 +116,6 @@ export function mapSemesterPlanForm(values: SemesterPlanFormValues) {
     keHoachId: Number(values.trainingPlanId),
     hocKyId: Number(values.semesterId),
     tenKeHoachHocKy: values.name.trim(),
-    trangThai: values.status,
     ghiChu: values.note.trim() || null,
   };
 }

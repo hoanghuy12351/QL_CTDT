@@ -27,6 +27,9 @@ export type CurriculumRelationDto = {
   maHocPhan?: string;
   tenHocPhan?: string;
   soTinChi?: number;
+  soTietLyThuyet?: number;
+  soTietThucHanh?: number;
+  tongSoTiet?: number;
   loaiHocPhan?: string;
 };
 
@@ -118,6 +121,9 @@ export type CurriculumCourse = {
   courseCode: string;
   courseName: string;
   credits: number;
+  theoryHours: number;
+  practiceHours: number;
+  totalHours: number;
   courseType: string;
 };
 

@@ -10,7 +10,9 @@ import FormModal from "../../components/admin/crud/FormModal";
 import EmptyState from "../../components/common/EmptyState";
 import ErrorState from "../../components/common/ErrorState";
 import Button from "../../components/ui/Button";
-import SelectInput, { type SelectOption } from "../../components/ui/SelectInput";
+import SelectInput, {
+  type SelectOption,
+} from "../../components/ui/SelectInput";
 import Toast, { type ToastType } from "../../components/ui/Toast";
 import { useDebounce } from "../../hooks/useDebounce";
 import { useDisclosure } from "../../hooks/useDisclosure";
@@ -44,14 +46,19 @@ export default function TeachingGroupPage() {
   const groupFormDisclosure = useDisclosure();
   const quickFormDisclosure = useDisclosure();
   const deleteDisclosure = useDisclosure();
-  const { limit, page, resetPage, setLimit, setPage } = usePagination({ initialLimit: 10 });
+  const { limit, page, resetPage, setLimit, setPage } = usePagination({
+    initialLimit: 10,
+  });
 
   const [keyword, setKeyword] = useState("");
   const debouncedKeyword = useDebounce(keyword, 400);
   const [selectedSemesterPlanId, setSelectedSemesterPlanId] = useState("");
-  const [selectedClassCourse, setSelectedClassCourse] = useState<OpenedClassCourse | null>(null);
+  const [selectedClassCourse, setSelectedClassCourse] =
+    useState<OpenedClassCourse | null>(null);
   const [editingGroup, setEditingGroup] = useState<TeachingGroup | null>(null);
-  const [deletingGroup, setDeletingGroup] = useState<TeachingGroup | null>(null);
+  const [deletingGroup, setDeletingGroup] = useState<TeachingGroup | null>(
+    null,
+  );
   const [classFilter, setClassFilter] = useState("");
   const [courseFilter, setCourseFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState<TeachingGroupType | "">("");
@@ -59,15 +66,26 @@ export default function TeachingGroupPage() {
 
   useEffect(() => {
     resetPage();
-  }, [debouncedKeyword, classFilter, courseFilter, typeFilter, selectedSemesterPlanId, resetPage]);
+  }, [
+    debouncedKeyword,
+    classFilter,
+    courseFilter,
+    typeFilter,
+    selectedSemesterPlanId,
+    resetPage,
+  ]);
 
   useEffect(() => {
     if (!toast) return;
+
     const timer = window.setTimeout(() => setToast(null), 3500);
+
     return () => window.clearTimeout(timer);
   }, [toast]);
 
-  const showToast = (type: ToastType, message: string) => setToast({ type, message });
+  const showToast = (type: ToastType, message: string) => {
+    setToast({ type, message });
+  };
 
   const semesterPlansQuery = useQuery({
     queryKey: ["teaching-groups-semester-plans"],
@@ -91,7 +109,8 @@ export default function TeachingGroupPage() {
 
   const openedClassCoursesQuery = useQuery({
     queryKey: ["teaching-groups-opened-class-courses", selectedSemesterPlanId],
-    queryFn: () => teachingGroupsApi.listOpenedClassCourses(Number(selectedSemesterPlanId)),
+    queryFn: () =>
+      teachingGroupsApi.listOpenedClassCourses(Number(selectedSemesterPlanId)),
     enabled: Boolean(selectedSemesterPlanId),
   });
 
@@ -108,30 +127,45 @@ export default function TeachingGroupPage() {
 
     setSelectedClassCourse((current) => {
       if (!current) return openedClassCourses[0];
-      return openedClassCourses.find((item) => item.id === current.id) ?? openedClassCourses[0];
+
+      return (
+        openedClassCourses.find((item) => item.id === current.id) ??
+        openedClassCourses[0]
+      );
     });
   }, [openedClassCourses]);
 
   const classOptions = useMemo<SelectOption[]>(() => {
     const map = new Map<number, SelectOption>();
+
     openedClassCourses.forEach((item) => {
       map.set(item.classId, {
         value: String(item.classId),
-        label: item.classCode ? `${item.classCode} - ${item.className}` : item.className,
+        label: item.classCode
+          ? `${item.classCode} - ${item.className}`
+          : item.className,
       });
     });
+
     return [{ label: "Tất cả lớp", value: "" }, ...Array.from(map.values())];
   }, [openedClassCourses]);
 
   const courseOptions = useMemo<SelectOption[]>(() => {
     const map = new Map<number, SelectOption>();
+
     openedClassCourses.forEach((item) => {
       map.set(item.courseId, {
         value: String(item.courseId),
-        label: item.courseCode ? `${item.courseCode} - ${item.courseName}` : item.courseName,
+        label: item.courseCode
+          ? `${item.courseCode} - ${item.courseName}`
+          : item.courseName,
       });
     });
-    return [{ label: "Tất cả học phần", value: "" }, ...Array.from(map.values())];
+
+    return [
+      { label: "Tất cả học phần", value: "" },
+      ...Array.from(map.values()),
+    ];
   }, [openedClassCourses]);
 
   const groupsQuery = useQuery({
@@ -150,7 +184,9 @@ export default function TeachingGroupPage() {
         page,
         limit,
         keyword: debouncedKeyword.trim() || undefined,
-        keHoachHocKyId: selectedSemesterPlanId ? Number(selectedSemesterPlanId) : undefined,
+        keHoachHocKyId: selectedSemesterPlanId
+          ? Number(selectedSemesterPlanId)
+          : undefined,
         lopId: classFilter ? Number(classFilter) : undefined,
         hocPhanId: courseFilter ? Number(courseFilter) : undefined,
         loaiNhom: typeFilter,
@@ -169,7 +205,9 @@ export default function TeachingGroupPage() {
   const invalidateGroupData = async () => {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: ["teaching-groups"] }),
-      queryClient.invalidateQueries({ queryKey: ["teaching-groups-opened-class-courses"] }),
+      queryClient.invalidateQueries({
+        queryKey: ["teaching-groups-opened-class-courses"],
+      }),
     ]);
   };
 
@@ -185,7 +223,10 @@ export default function TeachingGroupPage() {
       await invalidateGroupData();
     },
     onError: (error) =>
-      showToast("error", getApiErrorMessage(error, "Không thể tạo nhóm học phần")),
+      showToast(
+        "error",
+        getApiErrorMessage(error, "Không thể tạo nhóm học phần"),
+      ),
   });
 
   const quickCreateMutation = useMutation({
@@ -215,11 +256,15 @@ export default function TeachingGroupPage() {
       await invalidateGroupData();
     },
     onError: (error) =>
-      showToast("error", getApiErrorMessage(error, "Không thể cập nhật nhóm học phần")),
+      showToast(
+        "error",
+        getApiErrorMessage(error, "Không thể cập nhật nhóm học phần"),
+      ),
   });
 
   const deleteGroupMutation = useMutation({
-    mutationFn: (group: TeachingGroup) => teachingGroupsApi.removeGroup(group.id),
+    mutationFn: (group: TeachingGroup) =>
+      teachingGroupsApi.removeGroup(group.id),
     onSuccess: async () => {
       showToast("success", "Xóa nhóm học phần thành công");
       setDeletingGroup(null);
@@ -227,7 +272,10 @@ export default function TeachingGroupPage() {
       await invalidateGroupData();
     },
     onError: (error) =>
-      showToast("error", getApiErrorMessage(error, "Không thể xóa nhóm học phần")),
+      showToast(
+        "error",
+        getApiErrorMessage(error, "Không thể xóa nhóm học phần"),
+      ),
   });
 
   const openCreateGroup = (classCourse: OpenedClassCourse) => {
@@ -242,7 +290,10 @@ export default function TeachingGroupPage() {
   };
 
   const openEditGroup = (group: TeachingGroup) => {
-    const classCourse = openedClassCourses.find((item) => item.id === group.classCoursePlanId) ?? null;
+    const classCourse =
+      openedClassCourses.find((item) => item.id === group.classCoursePlanId) ??
+      null;
+
     setSelectedClassCourse(classCourse);
     setEditingGroup(group);
     groupFormDisclosure.open();
@@ -250,7 +301,13 @@ export default function TeachingGroupPage() {
 
   return (
     <section className="space-y-4">
-      {toast ? <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} /> : null}
+      {toast ? (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          onClose={() => setToast(null)}
+        />
+      ) : null}
 
       <div className="text-sm">
         <span className="font-medium text-slate-500">Quản trị</span>
@@ -264,11 +321,16 @@ export default function TeachingGroupPage() {
             <div className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700 ring-1 ring-brand-100">
               <GitBranchPlus size={22} aria-hidden="true" />
             </div>
+
             <div className="min-w-0">
-              <h1 className="text-xl font-bold text-slate-950">Tạo nhóm học phần</h1>
+              <h1 className="text-xl font-bold text-slate-950">
+                Tạo nhóm học phần
+              </h1>
               <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-500">
-                Chia các lớp - học phần đã mở trong kế hoạch học kỳ thành nhóm lý thuyết và thực hành để phục vụ phân công giảng viên.
+                Chia các lớp - học phần đã mở trong kế hoạch học kỳ thành nhóm
+                lý thuyết và thực hành để phục vụ phân công giảng viên.
               </p>
+
               <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
                 <span className="rounded-md bg-slate-100 px-2.5 py-1 text-slate-700">
                   {openedClassCourses.length} lớp - học phần
@@ -279,6 +341,7 @@ export default function TeachingGroupPage() {
               </div>
             </div>
           </div>
+
           <Button
             className="w-full lg:w-auto"
             leftIcon={<Plus size={16} aria-hidden="true" />}
@@ -303,9 +366,29 @@ export default function TeachingGroupPage() {
               setSelectedClassCourse(null);
             }}
           />
-          <SelectInput label="Lớp" options={classOptions} value={classFilter} onChange={(event) => setClassFilter(event.target.value)} />
-          <SelectInput label="Học phần" options={courseOptions} value={courseFilter} onChange={(event) => setCourseFilter(event.target.value)} />
-          <SelectInput label="Loại nhóm" options={typeOptions} value={typeFilter} onChange={(event) => setTypeFilter(event.target.value as TeachingGroupType | "")} />
+
+          <SelectInput
+            label="Lớp"
+            options={classOptions}
+            value={classFilter}
+            onChange={(event) => setClassFilter(event.target.value)}
+          />
+
+          <SelectInput
+            label="Học phần"
+            options={courseOptions}
+            value={courseFilter}
+            onChange={(event) => setCourseFilter(event.target.value)}
+          />
+
+          <SelectInput
+            label="Loại nhóm"
+            options={typeOptions}
+            value={typeFilter}
+            onChange={(event) =>
+              setTypeFilter(event.target.value as TeachingGroupType | "")
+            }
+          />
         </div>
       </div>
 
@@ -314,7 +397,9 @@ export default function TeachingGroupPage() {
         searchPlaceholder="Tìm nhóm, lớp, học phần..."
         isSearching={groupsQuery.isFetching}
         onKeywordChange={setKeyword}
-        onSearch={() => groupsQuery.refetch()}
+        onSearch={() => {
+          void groupsQuery.refetch();
+        }}
         onReset={() => {
           setKeyword("");
           setClassFilter("");
@@ -322,13 +407,19 @@ export default function TeachingGroupPage() {
           setTypeFilter("");
           resetPage();
         }}
-        leftSlot={<span className="text-sm font-medium text-slate-500">Chọn một dòng lớp - học phần để tạo nhóm nhanh hoặc tạo thủ công.</span>}
+        leftSlot={
+          <span className="text-sm font-medium text-slate-500">
+            Chọn một dòng lớp - học phần để tạo nhóm nhanh hoặc tạo thủ công.
+          </span>
+        }
         rightSlot={
           <Button
             variant="secondary"
             className="min-h-10"
             leftIcon={<RotateCcw size={15} aria-hidden="true" />}
-            onClick={() => invalidateGroupData()}
+            onClick={() => {
+              void invalidateGroupData();
+            }}
           >
             Tải lại
           </Button>
@@ -344,7 +435,10 @@ export default function TeachingGroupPage() {
       ) : openedClassCoursesQuery.isError ? (
         <ErrorState
           title="Không tải được danh sách lớp - học phần"
-          description={getApiErrorMessage(openedClassCoursesQuery.error, "Vui lòng thử lại sau.")}
+          description={getApiErrorMessage(
+            openedClassCoursesQuery.error,
+            "Vui lòng thử lại sau.",
+          )}
           onAction={() => openedClassCoursesQuery.refetch()}
         />
       ) : (
@@ -358,7 +452,10 @@ export default function TeachingGroupPage() {
       )}
 
       <div className="space-y-3">
-        <h2 className="text-base font-bold text-slate-950">Danh sách nhóm học phần</h2>
+        <h2 className="text-base font-bold text-slate-950">
+          Danh sách nhóm học phần
+        </h2>
+
         <TeachingGroupTable
           rows={groupRows}
           isLoading={groupsQuery.isLoading}
@@ -369,6 +466,7 @@ export default function TeachingGroupPage() {
             deleteDisclosure.open();
           }}
         />
+
         <AdminCrudPagination
           pagination={pagination}
           isLoading={groupsQuery.isFetching}
@@ -381,7 +479,10 @@ export default function TeachingGroupPage() {
         isOpen={groupFormDisclosure.isOpen}
         title={editingGroup ? "Cập nhật nhóm học phần" : "Thêm nhóm học phần"}
         onClose={() => {
-          if (!createGroupMutation.isPending && !updateGroupMutation.isPending) {
+          if (
+            !createGroupMutation.isPending &&
+            !updateGroupMutation.isPending
+          ) {
             setEditingGroup(null);
             groupFormDisclosure.close();
           }
@@ -390,13 +491,17 @@ export default function TeachingGroupPage() {
         <TeachingGroupForm
           classCourse={selectedClassCourse}
           initialData={editingGroup}
-          isSubmitting={createGroupMutation.isPending || updateGroupMutation.isPending}
+          isSubmitting={
+            createGroupMutation.isPending || updateGroupMutation.isPending
+          }
           onCancel={() => {
             setEditingGroup(null);
             groupFormDisclosure.close();
           }}
           onSubmit={(values) =>
-            editingGroup ? updateGroupMutation.mutate(values) : createGroupMutation.mutate(values)
+            editingGroup
+              ? updateGroupMutation.mutate(values)
+              : createGroupMutation.mutate(values)
           }
         />
       </FormModal>

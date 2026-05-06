@@ -51,12 +51,15 @@ export const curriculumColumns = [
 ];
 
 export const curriculumCourseColumns = [
+  { key: "index", label: "STT" },
   { key: "semester", label: "Học kỳ" },
-  { key: "course", label: "Học phần" },
-  { key: "credits", label: "TC" },
-  { key: "progress", label: "Tiến độ" },
-  { key: "required", label: "Loại" },
-  { key: "actions", label: "Thao tác" },
+  { key: "code", label: "Mã học phần" },
+  { key: "name", label: "Tên học phần" },
+  { key: "credits", label: "Số tín" },
+  { key: "theoryHours", label: "Số tiết LT" },
+  { key: "practiceHours", label: "Số tiết thực hành" },
+  { key: "totalHours", label: "Tổng số tiết" },
+  { key: "type", label: "Loại" },
 ];
 
 export const assignmentColumns = [

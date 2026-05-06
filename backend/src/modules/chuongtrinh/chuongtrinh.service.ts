@@ -276,6 +276,17 @@ export const chuongTrinhService = {
     }
 
     const result = await prisma.$transaction(async (tx) => {
+      await tx.lopChuongTrinh.updateMany({
+        where: {
+          lopId: input.lopId,
+          chuongTrinhId: { not: curriculumId },
+          trangThai: "dang_ap_dung",
+        },
+        data: {
+          trangThai: "ngung_ap_dung",
+        },
+      });
+
       const assignment = await tx.lopChuongTrinh.upsert({
         where: {
           lopId_chuongTrinhId: {

@@ -17,6 +17,17 @@ import type {
 
 const asText = (value?: string | null) => value?.trim() ?? "";
 
+const courseTypeLabels: Record<string, string> = {
+  dai_hoc_thong_thuong: "Đại học thông thường",
+  thuc_hanh: "Thực hành",
+  do_an_du_an: "Đồ án / Dự án",
+  thuc_tap: "Thực tập",
+  do_an_khoa_luan_tot_nghiep: "Đồ án / Khóa luận tốt nghiệp",
+  cao_hoc: "Cao học",
+  huong_dan_luan_van: "Hướng dẫn luận văn",
+  khac: "Khác",
+};
+
 const asOptionalNumber = (value: string) => {
   const trimmed = value.trim();
   return trimmed ? Number(trimmed) : null;
@@ -57,7 +68,16 @@ export function mapCurriculumCourse(dto: CurriculumCourseDto): CurriculumCourse 
     courseCode: dto.hocPhan?.maHocPhan ?? "",
     courseName: dto.hocPhan?.tenHocPhan ?? "-",
     credits: Number(dto.hocPhan?.soTinChi ?? 0),
-    courseType: dto.hocPhan?.loaiHocPhan ?? "-",
+    theoryHours: Number(dto.hocPhan?.soTietLyThuyet ?? 0),
+    practiceHours: Number(dto.hocPhan?.soTietThucHanh ?? 0),
+    totalHours: Number(
+      dto.hocPhan?.tongSoTiet ??
+        Number(dto.hocPhan?.soTietLyThuyet ?? 0) +
+          Number(dto.hocPhan?.soTietThucHanh ?? 0),
+    ),
+    courseType: dto.hocPhan?.loaiHocPhan
+      ? (courseTypeLabels[dto.hocPhan.loaiHocPhan] ?? dto.hocPhan.loaiHocPhan)
+      : "-",
   };
 }
 

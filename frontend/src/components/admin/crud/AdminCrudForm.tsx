@@ -18,6 +18,7 @@ type AdminCrudFormProps = {
 
 const toInputValue = (value: unknown, type?: AdminFieldType) => {
   if (value === null || value === undefined) return "";
+  if (type === "checkbox") return value ? "true" : "false";
   if (type === "month" && typeof value === "string") {
     const monthYearMatch = value.match(/^(0[1-9]|1[0-2])\/(\d{4})$/);
     if (monthYearMatch) return `${monthYearMatch[2]}-${monthYearMatch[1]}`;
@@ -30,6 +31,7 @@ const toInputValue = (value: unknown, type?: AdminFieldType) => {
 };
 
 const normalizeValue = (type: AdminFieldType, value: string) => {
+  if (type === "checkbox") return value === "true";
   if (value.trim() === "") return undefined;
   if (type === "number") return Number(value);
   if (type === "month") {
@@ -116,6 +118,29 @@ function AdminCrudForm({
     <form className="space-y-6" onSubmit={handleSubmit}>
       <div className="grid gap-4 md:grid-cols-2">
         {config.fields.map((field) => {
+          if (field.type === "checkbox") {
+            return (
+              <label
+                key={field.name}
+                className="flex min-h-11 items-center gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700"
+              >
+                <input
+                  type="checkbox"
+                  className="size-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+                  disabled={isSaving}
+                  checked={(values[field.name] ?? "false") === "true"}
+                  onChange={(event) =>
+                    setFieldValue(
+                      field.name,
+                      event.target.checked ? "true" : "false",
+                    )
+                  }
+                />
+                <span>{field.label}</span>
+              </label>
+            );
+          }
+
           if (field.type === "select") {
             const dependencyValue = field.dependsOn
               ? values[field.dependsOn]

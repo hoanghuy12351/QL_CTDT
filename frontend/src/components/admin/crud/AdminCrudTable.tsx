@@ -24,6 +24,7 @@ const getValueByPath = (record: AdminCrudRecord, path: string) => {
 
 const formatCellValue = (value: unknown, fallback = "-") => {
   if (value === null || value === undefined || value === "") return fallback;
+  if (typeof value === "boolean") return value ? "Có" : "Không";
   if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}/.test(value)) {
     return new Intl.DateTimeFormat("vi-VN").format(new Date(value));
   }

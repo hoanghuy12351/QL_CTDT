@@ -163,11 +163,20 @@ export type SemesterPlanFormValues = {
   trainingPlanId: string;
   semesterId: string;
   name: string;
-  status: SemesterPlanStatus;
   note: string;
 };
 
 export type TrainingPlanListResult = {
   items: TrainingPlan[];
+  pagination: PaginationMeta;
+};
+
+export type TrainingPlanDetail = {
+  plan: TrainingPlan;
+  semesterPlans: SemesterPlan[];
+};
+
+export type SemesterPlanListResult = {
+  items: SemesterPlan[];
   pagination: PaginationMeta;
 };
