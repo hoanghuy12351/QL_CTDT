@@ -171,6 +171,20 @@ mysql -u root -p university_management < backend/sql/seed-qlctdt-idempotent.sql
 Bước nhập dữ liệu mẫu là tùy chọn. Nếu không nhập, hãy chạy ứng dụng và đăng
 ký tài khoản quản trị đầu tiên tại trang `/auth/register`.
 
+### Tài khoản dùng thử
+
+Các tài khoản dưới đây được tạo khi import file
+`backend/sql/seed-qlctdt-idempotent.sql`:
+
+| Vai trò | Email | Mật khẩu |
+| --- | --- | --- |
+| Quản trị viên | `test.giaovu@utehy.edu.vn` | `123456` |
+| Giảng viên | `nguyenvanhau@gmail.com` | `123456` |
+
+Nếu không sử dụng dữ liệu seed, truy cập `/auth/register` để tạo tài khoản mới.
+Các tài khoản trên chỉ dành cho môi trường development/demo. Hãy đổi mật khẩu
+mặc định và không sử dụng chúng khi triển khai production.
+
 ### 7. Khởi động development
 
 Chạy đồng thời backend và frontend:
