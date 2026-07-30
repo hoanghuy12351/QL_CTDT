@@ -2,13 +2,13 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { authService } from "../../features/auth/auth.service";
 import { useAuthStore } from "../../features/auth/auth.store";
-import { getHomePathByRole, isAdminRole } from "../../features/auth/role";
+import { getHomePathByRole, isLecturerRole } from "../../features/auth/role";
 
-type RequireAdminProps = {
+type RequireLecturerProps = {
   children: ReactNode;
 };
 
-export function RequireAdmin({ children }: RequireAdminProps) {
+export function RequireLecturer({ children }: RequireLecturerProps) {
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -43,7 +43,7 @@ export function RequireAdmin({ children }: RequireAdminProps) {
 
         setSession(currentUser, accessToken);
 
-        if (!isAdminRole(currentUser.vaiTro)) {
+        if (!isLecturerRole(currentUser.vaiTro)) {
           navigate(getHomePathByRole(currentUser.vaiTro), { replace: true });
           return;
         }
@@ -76,7 +76,7 @@ export function RequireAdmin({ children }: RequireAdminProps) {
     return <Navigate to="/auth/login" replace />;
   }
 
-  if (!isAdminRole(user.vaiTro)) {
+  if (!isLecturerRole(user.vaiTro)) {
     return <Navigate to={getHomePathByRole(user.vaiTro)} replace />;
   }
 

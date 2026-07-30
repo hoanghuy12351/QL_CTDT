@@ -4,22 +4,22 @@ import Button from "../../components/ui/Button";
 import TextInput from "../../components/ui/TextInput";
 import { authService } from "../../features/auth/auth.service";
 import { useAuthStore } from "../../features/auth/auth.store";
+import { getHomePathByRole } from "../../features/auth/role";
 
 const getErrorMessage = (error: unknown) => {
   if (error && typeof error === "object" && "response" in error) {
     const response = (error as { response?: { data?: { message?: string } } })
       .response;
-    return response?.data?.message ?? "Dang nhap that bai";
+    return response?.data?.message ?? "Đăng nhập thất bại";
   }
 
-  return "Dang nhap that bai";
+  return "Đăng nhập thất bại";
 };
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const from =
-    (location.state as { from?: string } | null)?.from ?? "/admin/dashboard";
+  const from = (location.state as { from?: string } | null)?.from;
 
   const setSession = useAuthStore((state) => state.setSession);
   const [email, setEmail] = useState("");
@@ -35,7 +35,8 @@ export default function LoginPage() {
     try {
       const result = await authService.login({ email, password });
       setSession(result.user, result.token);
-      navigate(from, { replace: true });
+      const homePath = getHomePathByRole(result.user.vaiTro);
+      navigate(from && from !== "/" ? from : homePath, { replace: true });
     } catch (loginError) {
       setError(getErrorMessage(loginError));
     } finally {
@@ -49,9 +50,9 @@ export default function LoginPage() {
         <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-brand-600 text-sm font-bold text-white">
           CT
         </div>
-        <h1 className="mt-4 text-2xl font-bold text-slate-950">Dang nhap</h1>
+        <h1 className="mt-4 text-2xl font-bold text-slate-950">Đăng nhập</h1>
         <p className="mt-2 text-sm leading-6 text-slate-500">
-          Truy cap trang quan tri chuong trinh dao tao va ke hoach dao tao.
+          Đăng nhập để sử dụng hệ thống quản lý chương trình và kế hoạch đào tạo.
         </p>
       </div>
 
@@ -60,16 +61,16 @@ export default function LoginPage() {
           disabled={isLoading}
           label="Email"
           name="email"
-          placeholder="giaovu@utehy.edu.vn"
+          placeholder="admin@utehy.edu.vn"
           type="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
         />
         <TextInput
           disabled={isLoading}
-          label="Mat khau"
+          label="Mật khẩu"
           name="password"
-          placeholder="Nhap mat khau"
+          placeholder="Nhập mật khẩu"
           type="password"
           value={password}
           onChange={(event) => setPassword(event.target.value)}
@@ -80,7 +81,7 @@ export default function LoginPage() {
           </p>
         ) : null}
         <Button className="w-full" isLoading={isLoading} type="submit">
-          Dang nhap
+          Đăng nhập
         </Button>
       </form>
     </section>

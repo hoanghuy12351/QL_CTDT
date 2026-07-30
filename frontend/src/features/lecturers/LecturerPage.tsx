@@ -6,6 +6,14 @@ import AdminCrudPage from "../../pages/admin/AdminCrudPage";
 import { buildSelectOptions } from "../admin/crud/adminCrudPage.utils";
 import type { AdminCrudConfig } from "../admin/crud/adminCrud.types";
 
+const positionOptions = [
+  { label: "Giảng viên thường", value: "giang_vien" },
+  { label: "Trưởng bộ môn", value: "truong_bo_mon" },
+  { label: "Phó trưởng bộ môn", value: "pho_truong_bo_mon" },
+  { label: "Trợ giảng", value: "tro_giang" },
+  { label: "Khác", value: "khac" },
+];
+
 const statusOptions = [
   { label: "Đang giảng dạy", value: "dang_giang_day" },
   { label: "Tạm nghỉ", value: "tam_nghi" },
@@ -81,6 +89,12 @@ export default function LecturerPage() {
           placeholder: "VD: Giảng viên chính",
         },
         {
+          name: "chucVu",
+          label: "Chức vụ/loại định mức",
+          type: "select",
+          options: positionOptions,
+        },
+        {
           name: "dinhMucGio",
           label: "Định mức giờ",
           type: "number",
@@ -98,6 +112,7 @@ export default function LecturerPage() {
         { key: "hoTen", label: "Họ tên" },
         { key: "boMon.tenBoMon", label: "Bộ môn", fallback: "-" },
         { key: "hocVi", label: "Học vị", fallback: "-" },
+        { key: "chucVu", label: "Chức vụ", fallback: "giang_vien" },
         { key: "dinhMucGio", label: "Định mức", fallback: "0" },
         { key: "trangThai", label: "Trạng thái", fallback: "-" },
       ],

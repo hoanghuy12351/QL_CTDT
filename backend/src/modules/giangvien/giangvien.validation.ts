@@ -13,6 +13,7 @@ const giangVienBodySchema = z.object({
   soDienThoai: optionalText(20),
   hocVi: optionalText(50),
   chucDanh: optionalText(100),
+  chucVu: z.enum(["giang_vien", "tro_giang", "pho_truong_bo_mon", "truong_bo_mon", "pho_truong_khoa", "truong_khoa", "khac"]).optional(),
   dinhMucGio: z.coerce.number().nonnegative().nullable().optional(),
   trangThai: z.enum(["dang_giang_day", "tam_nghi"]).optional(),
 });
