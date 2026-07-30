@@ -40,6 +40,7 @@ const curriculumBodySchema = z.object({
   maChuongTrinh: nonEmptyText(50),
   tenChuongTrinh: nonEmptyText(255),
   nganhId: z.coerce.number().int().positive(),
+  boMonId: nullablePositiveId,
   chuyenNganhId: nullablePositiveId,
   khoaHocId: nullablePositiveId,
   tongTinChi: z.union([z.coerce.number().nonnegative(), z.null()]).optional(),
@@ -51,10 +52,9 @@ const curriculumBodySchema = z.object({
 
 const curriculumCourseBodySchema = z.object({
   hocPhanId: z.coerce.number().int().positive(),
-  hocKyDuKien: z.coerce.number().int().min(1),
-  tienDo: z.enum(["tien_do_1", "tien_do_2", "ca_ky"]).optional(),
+  hocKyDuKien: z.coerce.number().int().min(1).max(8),
   batBuoc: z.coerce.boolean().optional(),
-  thuTu: z.coerce.number().int().min(0).optional(),
+  thuTu: z.coerce.number().int().positive().optional(),
   ghiChu: nullableText(1000),
 });
 
@@ -78,11 +78,20 @@ export const updateCurriculumCourseSchema = curriculumCourseBodySchema
 
 export const assignClassSchema = z
   .object({
-    lopId: z.coerce.number().int().positive(),
+    lopId: z.coerce.number().int().positive().optional(),
+    lopIds: z.array(z.coerce.number().int().positive()).min(1).optional(),
     ngayApDung: z.string().trim().optional().nullable(),
     ghiChu: nullableText(1000),
   })
-  .strict();
+  .strict()
+  .transform((data) => ({
+    ...data,
+    lopIds: data.lopIds ?? (data.lopId ? [data.lopId] : []),
+  }))
+  .refine((data) => data.lopIds.length > 0, {
+    message: "Can chon it nhat mot lop",
+    path: ["lopIds"],
+  });
 
 export const updateProgressSchema = z
   .object({

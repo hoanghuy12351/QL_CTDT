@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link2 } from "lucide-react";
 import Button from "../../components/ui/Button";
-import SelectInput, { type SelectOption } from "../../components/ui/SelectInput";
+import type { SelectOption } from "../../components/ui/SelectInput";
 import TextareaInput from "../../components/ui/TextareaInput";
 import TextInput from "../../components/ui/TextInput";
 import type { AssignCurriculumFormValues } from "./curriculum.types";
@@ -20,7 +20,7 @@ export default function AssignCurriculumForm({
   onSubmit,
 }: AssignCurriculumFormProps) {
   const [values, setValues] = useState<AssignCurriculumFormValues>({
-    classId: "",
+    classIds: [],
     appliedAt: today,
     note: "",
   });
@@ -28,13 +28,25 @@ export default function AssignCurriculumForm({
 
   useEffect(() => {
     setClassError("");
-  }, [values.classId]);
+  }, [values.classIds]);
+
+  const toggleClass = (classId: string) => {
+    setValues((current) => {
+      const exists = current.classIds.includes(classId);
+      return {
+        ...current,
+        classIds: exists
+          ? current.classIds.filter((id) => id !== classId)
+          : [...current.classIds, classId],
+      };
+    });
+  };
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!values.classId) {
-      setClassError("Lớp áp dụng là bắt buộc");
+    if (values.classIds.length === 0) {
+      setClassError("Chọn ít nhất một lớp áp dụng");
       return;
     }
 
@@ -46,18 +58,52 @@ export default function AssignCurriculumForm({
 
   return (
     <form className="space-y-5" onSubmit={handleSubmit}>
-      <div className="grid gap-x-4 gap-y-4 md:grid-cols-2 xl:grid-cols-3">
-        <SelectInput
-          disabled={isSubmitting}
-          error={classError}
-          label="Lớp áp dụng *"
-          name="classId"
-          options={classOptions}
-          value={values.classId}
-          onChange={(event) =>
-            setValues((current) => ({ ...current, classId: event.target.value }))
-          }
-        />
+      <div className="grid gap-x-4 gap-y-4 xl:grid-cols-[minmax(0,1fr)_240px]">
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-sm font-medium text-slate-700">Lớp áp dụng *</span>
+            <span className="text-xs font-semibold text-slate-500">
+              Đã chọn {values.classIds.length}
+            </span>
+          </div>
+          <div
+            aria-invalid={Boolean(classError)}
+            className={[
+              "grid max-h-56 gap-2 overflow-y-auto rounded-lg border border-slate-200 bg-white p-3",
+              "sm:grid-cols-2 xl:grid-cols-3",
+              classError ? "border-red-300" : "",
+            ].join(" ")}
+          >
+            {classOptions.map((option) => {
+              const value = String(option.value);
+              const checked = values.classIds.includes(value);
+
+              return (
+                <label
+                  key={value}
+                  className={[
+                    "flex min-h-10 cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm transition",
+                    checked
+                      ? "border-brand-300 bg-brand-50 text-brand-900"
+                      : "border-slate-200 bg-slate-50 text-slate-700 hover:border-brand-200 hover:bg-brand-50/50",
+                    isSubmitting ? "cursor-not-allowed opacity-70" : "",
+                  ].join(" ")}
+                >
+                  <input
+                    type="checkbox"
+                    className="size-4 rounded border-slate-300 text-brand-700 focus:ring-brand-500"
+                    checked={checked}
+                    disabled={isSubmitting}
+                    onChange={() => toggleClass(value)}
+                  />
+                  <span className="min-w-0 truncate">{option.label}</span>
+                </label>
+              );
+            })}
+          </div>
+          {classError ? <p className="text-sm text-red-600">{classError}</p> : null}
+        </div>
+
         <TextInput
           disabled={isSubmitting}
           label="Ngày áp dụng"
@@ -81,7 +127,11 @@ export default function AssignCurriculumForm({
       />
 
       <div className="flex justify-end">
-        <Button type="submit" isLoading={isSubmitting} leftIcon={<Link2 size={16} aria-hidden="true" />}>
+        <Button
+          type="submit"
+          isLoading={isSubmitting}
+          leftIcon={<Link2 size={16} aria-hidden="true" />}
+        >
           Gán CTĐT và sinh tiến độ
         </Button>
       </div>

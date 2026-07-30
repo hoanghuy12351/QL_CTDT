@@ -19,6 +19,7 @@ const baseHocPhanSchema = z.object({
   soTietLyThuyet: z.coerce.number().int().min(0),
   soTietThucHanh: z.coerce.number().int().min(0),
   tongSoTiet: z.coerce.number().int().min(0).optional(),
+  heSoSiSo: z.coerce.number().min(0).optional(),
   loaiHocPhan: loaiHocPhanSchema.optional(),
   boMonId: z.coerce.number().int().positive().optional(),
   moTa: z.string().trim().max(65535).optional(),

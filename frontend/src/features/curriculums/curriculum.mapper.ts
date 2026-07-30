@@ -39,6 +39,7 @@ export function mapCurriculum(dto: CurriculumDto): Curriculum {
     code: dto.maChuongTrinh,
     name: dto.tenChuongTrinh,
     majorId: dto.nganhId,
+    departmentId: dto.boMonId ?? null,
     specializationId: dto.chuyenNganhId ?? null,
     cohortId: dto.khoaHocId ?? null,
     totalCredits: Number(dto.tongTinChi ?? 0),
@@ -47,6 +48,7 @@ export function mapCurriculum(dto: CurriculumDto): Curriculum {
     status: dto.trangThai ?? "du_thao",
     description: asText(dto.moTa),
     majorName: dto.nganh?.tenNganh ?? "-",
+    departmentName: dto.boMon?.tenBoMon ?? "-",
     specializationName: dto.chuyenNganh?.tenChuyenNganh ?? "-",
     cohortName: dto.khoaHoc?.tenKhoaHoc ?? "-",
     courseCount: dto._count?.chuongTrinhHocPhan ?? 0,
@@ -61,7 +63,6 @@ export function mapCurriculumCourse(dto: CurriculumCourseDto): CurriculumCourse 
     curriculumId: dto.chuongTrinhId,
     courseId: dto.hocPhanId,
     semester: dto.hocKyDuKien,
-    progress: dto.tienDo ?? "ca_ky",
     required: dto.batBuoc ?? true,
     order: dto.thuTu ?? 0,
     note: asText(dto.ghiChu),
@@ -120,6 +121,7 @@ export function mapCurriculumFormValuesToPayload(
     maChuongTrinh: values.code.trim(),
     tenChuongTrinh: values.name.trim(),
     nganhId: Number(values.majorId),
+    boMonId: asOptionalNumber(values.departmentId),
     chuyenNganhId: asOptionalNumber(values.specializationId),
     khoaHocId: asOptionalNumber(values.cohortId),
     tongTinChi: asOptionalNumber(values.totalCredits),
@@ -136,9 +138,8 @@ export function mapCourseFormValuesToPayload(
   return {
     hocPhanId: Number(values.courseId),
     hocKyDuKien: Number(values.semester),
-    tienDo: values.progress,
     batBuoc: values.required === "true",
-    thuTu: values.order.trim() ? Number(values.order) : 0,
+    thuTu: values.order.trim() ? Number(values.order) : undefined,
     ghiChu: values.note.trim() || null,
   };
 }
@@ -147,7 +148,7 @@ export function mapAssignFormValuesToPayload(
   values: AssignCurriculumFormValues,
 ): AssignCurriculumPayload {
   return {
-    lopId: Number(values.classId),
+    lopIds: values.classIds.map(Number),
     ngayApDung: values.appliedAt || null,
     ghiChu: values.note.trim() || null,
   };

@@ -24,6 +24,21 @@ import type {
 
 const unwrap = <T>(response: ApiResponse<T>) => response.data;
 
+const getFilenameFromDisposition = (
+  disposition: string | undefined,
+  fallback: string,
+) => {
+  if (!disposition) return fallback;
+
+  const utf8Match = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+  if (utf8Match?.[1]) {
+    return decodeURIComponent(utf8Match[1].replace(/"/g, ""));
+  }
+
+  const asciiMatch = disposition.match(/filename="?([^";]+)"?/i);
+  return asciiMatch?.[1] ? asciiMatch[1] : fallback;
+};
+
 const mapCurriculumList = (
   response: PaginatedResponse<CurriculumDto>,
 ): CurriculumListResult => ({
@@ -46,6 +61,21 @@ export const curriculumsApi = {
       `/admin/chuong-trinh-dao-tao/${id}`,
     );
     return mapCurriculum(unwrap(data));
+  },
+
+  exportExcel: async (id: number) => {
+    const response = await axiosClient.get<Blob>(
+      `/admin/chuong-trinh-dao-tao/${id}/export-excel`,
+      { responseType: "blob" },
+    );
+
+    return {
+      blob: response.data,
+      fileName: getFilenameFromDisposition(
+        response.headers["content-disposition"],
+        "chuong-trinh-dao-tao.xlsx",
+      ),
+    };
   },
 
   create: async (values: CurriculumFormValues) => {
@@ -117,6 +147,8 @@ export const curriculumsApi = {
     const { data } = await axiosClient.post<
       ApiResponse<{
         assignment: CurriculumAssignmentDto;
+        assignments: CurriculumAssignmentDto[];
+        totalClasses: number;
         totalCourses: number;
         createdProgress: number;
         skippedProgress: number;
@@ -127,6 +159,7 @@ export const curriculumsApi = {
     return {
       ...result,
       assignment: mapCurriculumAssignment(result.assignment),
+      assignments: result.assignments.map(mapCurriculumAssignment),
     };
   },
 

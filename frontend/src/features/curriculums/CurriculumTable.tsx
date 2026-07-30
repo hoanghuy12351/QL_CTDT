@@ -90,7 +90,9 @@ export default function CurriculumTable({
                   <td className="px-3 py-3 text-slate-600">
                     <span className="block truncate">{curriculum.majorName}</span>
                     <span className="mt-1 block truncate text-xs text-slate-400">
-                      {curriculum.specializationName}
+                      {curriculum.departmentName !== "-"
+                        ? curriculum.departmentName
+                        : curriculum.specializationName}
                     </span>
                   </td>
                   <td className="px-3 py-3 text-slate-600">

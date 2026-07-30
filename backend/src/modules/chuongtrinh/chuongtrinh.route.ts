@@ -33,6 +33,15 @@ import {
 
 const router = Router();
 
+const toAsciiHeaderFileName = (fileName: string) =>
+  fileName
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "D")
+    .replace(/[^\x20-\x7E]+/g, "-")
+    .replace(/["\\;]/g, "-");
+
 router.use(authMiddleware, requireRole("quan_tri", "giao_vu"));
 
 router.get(
@@ -136,6 +145,25 @@ router.get(
     const params = req.validated?.params as ClassProgressParam;
     const result = await chuongTrinhService.listProgress(params.id, params.lopId);
     return sendSuccess(res, "Lay tien do hoc phan cua lop thanh cong", result);
+  }),
+);
+
+router.get(
+  "/:id/export-excel",
+  validate({ params: curriculumIdParamSchema }),
+  asyncHandler(async (req: Request, res: Response) => {
+    const params = req.validated?.params as CurriculumIdParam;
+    const result = await chuongTrinhService.exportExcel(params.id);
+    const encodedFileName = encodeURIComponent(result.fileName);
+    const asciiFileName = toAsciiHeaderFileName(result.fileName);
+
+    res.setHeader("Content-Type", result.contentType);
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${asciiFileName}"; filename*=UTF-8''${encodedFileName}`,
+    );
+
+    return res.send(result.buffer);
   }),
 );
 

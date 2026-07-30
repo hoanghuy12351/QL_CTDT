@@ -10,6 +10,7 @@ type CurriculumFormProps = {
   initialData?: Curriculum | null;
   isSubmitting?: boolean;
   majorOptions: SelectOption[];
+  departmentOptions?: SelectOption[];
   specializationOptions: SelectOption[];
   cohortOptions: SelectOption[];
   onCancel: () => void;
@@ -22,6 +23,7 @@ const emptyValues: CurriculumFormValues = {
   code: "",
   name: "",
   majorId: "",
+  departmentId: "",
   specializationId: "",
   cohortId: "",
   totalCredits: "",
@@ -49,6 +51,7 @@ export default function CurriculumForm({
   initialData,
   isSubmitting = false,
   majorOptions,
+  departmentOptions = [],
   onCancel,
   onSubmit,
   specializationOptions,
@@ -60,6 +63,9 @@ export default function CurriculumForm({
       code: initialData.code,
       name: initialData.name,
       majorId: String(initialData.majorId),
+      departmentId: initialData.departmentId
+        ? String(initialData.departmentId)
+        : "",
       specializationId: initialData.specializationId
         ? String(initialData.specializationId)
         : "",
@@ -133,6 +139,15 @@ export default function CurriculumForm({
           options={majorOptions}
           value={values.majorId}
           onChange={(event) => setFieldValue("majorId", event.target.value)}
+        />
+        <SelectInput
+          disabled={isSubmitting}
+          label="Bộ môn quản lý"
+          name="departmentId"
+          options={departmentOptions}
+          placeholder="Không chọn"
+          value={values.departmentId}
+          onChange={(event) => setFieldValue("departmentId", event.target.value)}
         />
         <SelectInput
           disabled={isSubmitting}

@@ -85,6 +85,10 @@ export default function CurriculumPage() {
     queryKey: ["admin-crud-options", "nganh"],
     queryFn: () => adminCrudApi.list("nganh", { page: 1, limit: 500 }),
   });
+  const departmentsQuery = useQuery({
+    queryKey: ["admin-crud-options", "bo-mon"],
+    queryFn: () => adminCrudApi.list("bo-mon", { page: 1, limit: 500 }),
+  });
   const specializationsQuery = useQuery({
     queryKey: ["admin-crud-options", "chuyen-nganh"],
     queryFn: () => adminCrudApi.list("chuyen-nganh", { page: 1, limit: 500 }),
@@ -105,6 +109,16 @@ export default function CurriculumPage() {
   const majorOptions = useMemo(
     () => buildOptions(majorsQuery.data?.items ?? [], "nganhId", "maNganh", "tenNganh"),
     [majorsQuery.data?.items],
+  );
+  const departmentOptions = useMemo(
+    () =>
+      buildOptions(
+        departmentsQuery.data?.items ?? [],
+        "boMonId",
+        "maBoMon",
+        "tenBoMon",
+      ),
+    [departmentsQuery.data?.items],
   );
   const specializationOptions = useMemo(
     () =>
@@ -281,6 +295,7 @@ export default function CurriculumPage() {
           initialData={editingCurriculum}
           isSubmitting={saveCurriculumMutation.isPending}
           majorOptions={majorOptions}
+          departmentOptions={departmentOptions}
           specializationOptions={specializationOptions}
           cohortOptions={cohortOptions}
           onCancel={() => {

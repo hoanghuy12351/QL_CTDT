@@ -5,6 +5,7 @@ import {
   classProgressColumns,
   progressLabels,
 } from "./curriculum.columns";
+import { getSemesterLabel } from "./curriculum.helpers";
 import type { ClassCourseStatus, ClassProgress } from "./curriculum.types";
 
 type ClassProgressTableProps = {
@@ -47,7 +48,7 @@ export default function ClassProgressTable({
             {rows.map((progress) => (
               <tr key={progress.id} className="bg-white transition hover:bg-slate-50">
                 <td className="px-3 py-3 text-center font-semibold text-slate-800">
-                  {progress.semester}
+                  {getSemesterLabel(progress.semester)}
                 </td>
                 <td className="px-3 py-3">
                   <span className="block truncate font-semibold text-slate-950">

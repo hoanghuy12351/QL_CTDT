@@ -14,6 +14,9 @@ export type CurriculumRelationDto = {
   nganhId?: number;
   maNganh?: string;
   tenNganh?: string;
+  boMonId?: number;
+  maBoMon?: string;
+  tenBoMon?: string;
   chuyenNganhId?: number;
   maChuyenNganh?: string;
   tenChuyenNganh?: string;
@@ -38,6 +41,7 @@ export type CurriculumDto = {
   maChuongTrinh: string;
   tenChuongTrinh: string;
   nganhId: number;
+  boMonId?: number | null;
   chuyenNganhId?: number | null;
   khoaHocId?: number | null;
   tongTinChi?: number | null;
@@ -48,6 +52,7 @@ export type CurriculumDto = {
   ngayTao?: string | null;
   ngayCapNhat?: string | null;
   nganh?: CurriculumRelationDto | null;
+  boMon?: CurriculumRelationDto | null;
   chuyenNganh?: CurriculumRelationDto | null;
   khoaHoc?: CurriculumRelationDto | null;
   _count?: {
@@ -61,7 +66,6 @@ export type CurriculumCourseDto = {
   chuongTrinhId: number;
   hocPhanId: number;
   hocKyDuKien: number;
-  tienDo?: CurriculumCourseProgress | null;
   batBuoc?: boolean | null;
   thuTu?: number | null;
   ghiChu?: string | null;
@@ -94,6 +98,7 @@ export type Curriculum = {
   code: string;
   name: string;
   majorId: number;
+  departmentId?: number | null;
   specializationId?: number | null;
   cohortId?: number | null;
   totalCredits: number;
@@ -102,6 +107,7 @@ export type Curriculum = {
   status: CurriculumStatus;
   description: string;
   majorName: string;
+  departmentName: string;
   specializationName: string;
   cohortName: string;
   courseCount: number;
@@ -114,7 +120,6 @@ export type CurriculumCourse = {
   curriculumId: number;
   courseId: number;
   semester: number;
-  progress: CurriculumCourseProgress;
   required: boolean;
   order: number;
   note: string;
@@ -166,6 +171,7 @@ export type CurriculumFormValues = {
   code: string;
   name: string;
   majorId: string;
+  departmentId: string;
   specializationId: string;
   cohortId: string;
   totalCredits: string;
@@ -178,14 +184,13 @@ export type CurriculumFormValues = {
 export type CurriculumCourseFormValues = {
   courseId: string;
   semester: string;
-  progress: CurriculumCourseProgress;
   required: string;
   order: string;
   note: string;
 };
 
 export type AssignCurriculumFormValues = {
-  classId: string;
+  classIds: string[];
   appliedAt: string;
   note: string;
 };
@@ -194,6 +199,7 @@ export type CurriculumPayload = {
   maChuongTrinh: string;
   tenChuongTrinh: string;
   nganhId: number;
+  boMonId?: number | null;
   chuyenNganhId?: number | null;
   khoaHocId?: number | null;
   tongTinChi?: number | null;
@@ -206,14 +212,13 @@ export type CurriculumPayload = {
 export type CurriculumCoursePayload = {
   hocPhanId: number;
   hocKyDuKien: number;
-  tienDo?: CurriculumCourseProgress;
   batBuoc?: boolean;
   thuTu?: number;
   ghiChu?: string | null;
 };
 
 export type AssignCurriculumPayload = {
-  lopId: number;
+  lopIds: number[];
   ngayApDung?: string | null;
   ghiChu?: string | null;
 };

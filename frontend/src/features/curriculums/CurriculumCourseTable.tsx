@@ -2,6 +2,7 @@ import { Edit3, Trash2 } from "lucide-react";
 import IconButton from "../../components/ui/IconButton";
 import TableSkeleton from "../../components/ui/TableSkeleton";
 import { curriculumCourseColumns } from "./curriculum.columns";
+import { getSemesterLabel } from "./curriculum.helpers";
 import type { CurriculumCourse } from "./curriculum.types";
 
 type CurriculumCourseTableProps = {
@@ -65,7 +66,7 @@ export default function CurriculumCourseTable({
                   {index + 1}
                 </td>
                 <td className="px-3 py-3 text-center font-semibold text-slate-800">
-                  {course.semester}
+                  {getSemesterLabel(course.semester)}
                 </td>
                 <td className="px-3 py-3">
                   <span className="inline-flex max-w-full rounded-md bg-slate-100 px-2 py-1 font-semibold text-slate-900">
