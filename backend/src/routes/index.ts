@@ -9,6 +9,7 @@ import boMonRoute from "../modules/bomon/bomon.route.js";
 import nganhRoute from "../modules/nganh/nganh.route.js";
 import chuyenNganhRoute from "../modules/chuyennganh/chuyennganh.route.js";
 import giangVienRoute from "../modules/giangvien/giangvien.route.js";
+import dinhMucGiangVienRoute from "../modules/dinh-muc-giang-vien/dinh-muc-giang-vien.route.js";
 import giangVienHocPhanRoute from "../modules/giangvienhocphan/giangvienhocphan.route.js";
 import lopRoute from "../modules/lop/lop.route.js";
 import coSoRoute from "../modules/coso/coso.route.js";
@@ -17,12 +18,15 @@ import khoaHocRoute from "../modules/khoahoc/khoahoc.route.js";
 import namHocRoute from "../modules/namhoc/namhoc.route.js";
 import hocKyRoute from "../modules/hocky/hocky.route.js";
 import chuongTrinhRoute from "../modules/chuongtrinh/chuongtrinh.route.js";
+import taiKhoanGiangVienRoute from "../modules/tai-khoan-giang-vien/tai-khoan-giang-vien.route.js";
+import lecturerRoute from "../modules/lecturer/lecturer.route.js";
 import adminCrudRoute from "../modules/admin-crud/admin-crud.route.js";
 
 const router = Router();
 
 router.use("/", healthRoute);
 router.use("/auth", authRoute);
+router.use("/lecturer", lecturerRoute);
 
 router.use("/admin/dashboard", adminDashboardRoute);
 router.use("/admin/ke-hoach", keHoachRoute);
@@ -36,6 +40,7 @@ router.use("/admin/chuyennganh", chuyenNganhRoute);
 router.use("/admin/chuyen-nganh", chuyenNganhRoute);
 router.use("/admin/giangvien", giangVienRoute);
 router.use("/admin/giang-vien", giangVienRoute);
+router.use("/admin/dinh-muc-giang-vien", dinhMucGiangVienRoute);
 router.use("/admin/giangvienhocphan", giangVienHocPhanRoute);
 router.use("/admin/giang-vien-hoc-phan", giangVienHocPhanRoute);
 router.use("/admin/lop", lopRoute);
@@ -53,6 +58,8 @@ router.use("/admin/chuongtrinh", chuongTrinhRoute);
 router.use("/admin/chuong-trinh-dao-tao", chuongTrinhRoute);
 router.use("/admin/ctdt", chuongTrinhRoute);
 router.use("/admin/curriculums", chuongTrinhRoute);
+router.use("/admin/tai-khoan-giang-vien", taiKhoanGiangVienRoute);
+router.use("/admin/lecturer-accounts", taiKhoanGiangVienRoute);
 
 // Dat route CRUD cuoi cung de khong an cac route cu the o tren.
 router.use("/admin", adminCrudRoute);

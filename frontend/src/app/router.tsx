@@ -3,6 +3,7 @@ import { createBrowserRouter, Navigate } from "react-router-dom";
 import AdminLayout from "./layouts/AdminLayout";
 import AuthLayout from "./layouts/AuthLayout";
 import { RequireAdmin } from "./guards/RequireAdmin";
+import { RequireLecturer } from "./guards/RequireLecturer";
 
 const LoginPage = lazy(() => import("../pages/auth/LoginPage"));
 const RegisterPage = lazy(() => import("../pages/auth/RegisterPage"));
@@ -16,6 +17,9 @@ const SpecializationPage = lazy(
   () => import("../features/specializations/SpecializationPage"),
 );
 const LecturerPage = lazy(() => import("../features/lecturers/LecturerPage"));
+const LecturerQuotaPage = lazy(
+  () => import("../features/lecturer-quotas/LecturerQuotaPage"),
+);
 const ClassPage = lazy(() => import("../features/classes/ClassPage"));
 const CoursePage = lazy(() => import("../features/courses/CoursePage"));
 const CohortPage = lazy(() => import("../features/cohorts/CohortPage"));
@@ -48,10 +52,19 @@ const TeachingGroupPage = lazy(
 const TeachingAssignmentPage = lazy(
   () => import("../features/teaching-assignments/TeachingAssignmentPage"),
 );
+const ReportPage = lazy(() => import("../features/reports/ReportPage"));
 const LecturerCoursePage = lazy(
   () => import("../features/lecturer-courses/LecturerCoursePage"),
 );
-const ReportPage = lazy(() => import("../features/reports/ReportPage"));
+const LecturerAccountPage = lazy(
+  () => import("../features/lecturer-accounts/LecturerAccountPage"),
+);
+const LecturerDashboardPage = lazy(
+  () => import("../pages/lecturer/LecturerDashboardPage"),
+);
+const LecturerAssignmentsPage = lazy(
+  () => import("../pages/lecturer/LecturerAssignmentsPage"),
+);
 function page(element: ReactNode) {
   return (
     <Suspense
@@ -65,6 +78,91 @@ function page(element: ReactNode) {
     </Suspense>
   );
 }
+export const modulePages = {
+  curriculums: {
+    title: "Chương trình đào tạo",
+    description:
+      "Quản lý CTĐT theo ngành, chuyên ngành, khóa học, lớp áp dụng và danh sách học phần theo từng học kỳ.",
+    primaryAction: "Thêm CTĐT",
+    actions: [
+      {
+        label: "Quản lý học phần trong CTĐT",
+        helper:
+          "Gắn học phần vào học kỳ dự kiến và tiến độ 1, tiến độ 2 hoặc cả kỳ.",
+      },
+      {
+        label: "Gắn CTĐT cho lớp",
+        helper:
+          "Mỗi lớp có thể áp dụng một CTĐT để theo dõi đã học hoặc chưa học.",
+      },
+      {
+        label: "Theo dõi tiến độ",
+        helper: "Biết học phần nào đã học, đang học, chưa học hoặc tạm hoãn.",
+      },
+    ],
+  },
+  trainingPlans: {
+    title: "Kế hoạch đào tạo",
+    description:
+      "Lập kế hoạch theo năm học, học kỳ, chọn lớp, gợi ý học phần cần mở và tạo kế hoạch lớp - học phần.",
+    primaryAction: "Lập kế hoạch",
+    actions: [
+      {
+        label: "Chọn nhiều lớp",
+        helper: "Hệ thống gợi ý học phần theo CTĐT riêng của từng lớp.",
+      },
+      {
+        label: "Ma trận lớp - học phần",
+        helper: "Chỉ lớp nào có học phần trong CTĐT mới được chọn.",
+      },
+      {
+        label: "Quản lý tuần đào tạo",
+        helper: "Nhập số tiết theo tuần, đúng với mẫu Excel hiện tại.",
+      },
+    ],
+  },
+  assignments: {
+    title: "Phân công giảng dạy",
+    description:
+      "Quản lý nhóm LT/TH, giảng viên phụ trách, số tiết phân công, hệ số lớp và lịch dạy theo tuần.",
+    primaryAction: "Phân công GV",
+    actions: [
+      {
+        label: "Tạo nhóm LT/TH",
+        helper: "Học phần có thực hành có thể chia TH1, TH2 theo sĩ số.",
+      },
+      {
+        label: "Phân công theo nhóm",
+        helper: "Mỗi nhóm LT/TH có giảng viên và số tiết phân công riêng.",
+      },
+      {
+        label: "Nhập số tiết theo tuần",
+        helper: "Đảm bảo tổng số tiết theo tuần bằng số tiết phân công.",
+      },
+    ],
+  },
+  reports: {
+    title: "Báo cáo",
+    description:
+      "Xuất kế hoạch đào tạo theo lớp, kế hoạch giảng dạy theo giảng viên và bảng tổng hợp theo học kỳ.",
+    primaryAction: "Xuất báo cáo",
+    actions: [
+      {
+        label: "Báo cáo theo lớp",
+        helper: "Xem kỳ này lớp học những học phần nào và ai giảng dạy.",
+      },
+      {
+        label: "Báo cáo theo giảng viên",
+        helper: "Thống kê giảng viên dạy lớp nào, môn nào, bao nhiêu tiết.",
+      },
+      {
+        label: "Báo cáo tổng hợp Excel",
+        helper: "Xuất bảng tuần 1, tuần 2 và tổng giờ tương tự file mẫu.",
+      },
+    ],
+  },
+};
+
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -167,6 +265,18 @@ export const router = createBrowserRouter([
         path: "giang-vien",
         element: page(<LecturerPage />),
       },
+      {
+        path: "dinh-muc-giang-vien",
+        element: page(<LecturerQuotaPage />),
+      },
+      {
+        path: "tai-khoan-giang-vien",
+        element: page(<LecturerAccountPage />),
+      },
+      {
+        path: "lecturer-accounts",
+        element: page(<LecturerAccountPage />),
+      },
       { path: "lop", element: page(<ClassPage />) },
       {
         path: "hocphan",
@@ -219,6 +329,19 @@ export const router = createBrowserRouter([
       { path: "subjects", element: <Navigate to="/admin/hocphan" replace /> },
       { path: "classes", element: <Navigate to="/admin/lop" replace /> },
       { path: "teachers", element: <Navigate to="/admin/giangvien" replace /> },
+    ],
+  },
+  {
+    path: "/lecturer",
+    element: (
+      <RequireLecturer>
+        <AdminLayout />
+      </RequireLecturer>
+    ),
+    children: [
+      { index: true, element: <Navigate to="/lecturer/dashboard" replace /> },
+      { path: "dashboard", element: page(<LecturerDashboardPage />) },
+      { path: "assignments", element: page(<LecturerAssignmentsPage />) },
     ],
   },
 ]);

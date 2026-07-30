@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { ChevronDown, ChevronLeft, ChevronRight, LogOut, X } from "lucide-react";
-import { ADMIN_NAV_ITEMS, APP_NAME } from "../../lib/constants";
+import { APP_NAME, getNavigationItemsForRole } from "../../lib/constants";
 import Button from "../../components/ui/Button";
 import { authService } from "../../features/auth/auth.service";
 import { useAuthStore } from "../../features/auth/auth.store";
+import { getRoleLabel, isLecturerRole } from "../../features/auth/role";
 import logo from "./school-logo.png";
 
 type AdminSidebarProps = {
@@ -23,10 +24,13 @@ export default function AdminSidebar({
   const navigate = useNavigate();
   const location = useLocation();
   const clearSession = useAuthStore((state) => state.clearSession);
+  const user = useAuthStore((state) => state.user);
+  const navItems = getNavigationItemsForRole(user?.vaiTro);
+  const isLecturer = isLecturerRole(user?.vaiTro);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    const activeGroups = ADMIN_NAV_ITEMS.reduce<Record<string, boolean>>((groups, item) => {
+    const activeGroups = navItems.reduce<Record<string, boolean>>((groups, item) => {
       const hasActiveChild = item.children?.some((child) =>
         location.pathname.startsWith(child.to),
       );
@@ -41,7 +45,7 @@ export default function AdminSidebar({
     if (Object.keys(activeGroups).length > 0) {
       setOpenGroups((current) => ({ ...current, ...activeGroups }));
     }
-  }, [location.pathname]);
+  }, [location.pathname, navItems]);
 
   const handleLogout = async () => {
     try {
@@ -114,7 +118,7 @@ export default function AdminSidebar({
               <div>
                 <p className="text-base font-extrabold">{APP_NAME}</p>
                 <p className="text-xs font-medium text-blue-100">
-                  Admin Center
+                  {isLecturer ? "Không gian giảng viên" : "Admin Center"}
                 </p>
               </div>
             )}
@@ -133,7 +137,7 @@ export default function AdminSidebar({
         </div>
 
         <nav className="flex-1 space-y-1 overflow-y-auto p-4">
-          {ADMIN_NAV_ITEMS.map((item) => {
+          {navItems.map((item) => {
             const hasChildren = Boolean(item.children?.length);
             const isGroupActive =
               hasChildren &&
@@ -244,6 +248,16 @@ export default function AdminSidebar({
         </nav>
 
         <div className="border-t border-white/10 p-4">
+          {isCollapsed ? null : (
+            <div className="mb-3 rounded-xl border border-white/10 bg-white/10 px-3 py-2">
+              <p className="truncate text-sm font-bold text-white">
+                {user?.hoTen ?? "Người dùng"}
+              </p>
+              <p className="mt-0.5 truncate text-xs font-medium text-blue-100">
+                {getRoleLabel(user?.vaiTro)}
+              </p>
+            </div>
+          )}
           <button
             type="button"
             aria-label="Đăng xuất"

@@ -5,6 +5,7 @@ import {
   Building2,
   CalendarDays,
   CalendarRange,
+  Calculator,
   ClipboardList,
   DoorOpen,
   FileSpreadsheet,
@@ -12,6 +13,7 @@ import {
   GitBranchPlus,
   Layers3,
   School,
+  UserCog,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -78,6 +80,20 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     icon: Users,
   },
   {
+    label: "Định mức giảng viên",
+    description: "Giờ tiêu chuẩn, tỷ lệ định mức và giờ phải dạy theo năm học",
+    to: "/admin/dinh-muc-giang-vien",
+    shortLabel: "ĐMGV",
+    icon: Calculator,
+  },
+  {
+    label: "Tài khoản giảng viên",
+    description: "Tạo, sửa và khóa tài khoản đăng nhập của giảng viên",
+    to: "/admin/tai-khoan-giang-vien",
+    shortLabel: "TKGV",
+    icon: UserCog,
+  },
+  {
     label: "Giảng viên học phần",
     description: "Khai báo giảng viên có thể dạy từng học phần",
     to: "/admin/giang-vien-hoc-phan",
@@ -121,7 +137,7 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   },
   {
     label: "Học kỳ",
-    description: "Học kỳ mẫu theo ngày/tháng, không gắn năm học",
+    description: "Học kỳ thuộc năm học và trạng thái sử dụng",
     to: "/admin/hocky",
     shortLabel: "HK",
     icon: CalendarRange,
@@ -178,3 +194,28 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     icon: FileSpreadsheet,
   },
 ];
+
+export const LECTURER_NAV_ITEMS: AdminNavItem[] = [
+  {
+    label: "Tổng quan",
+    description: "Số liệu và lịch dạy của giảng viên",
+    to: "/lecturer/dashboard",
+    shortLabel: "TQ",
+    icon: BarChart3,
+  },
+  {
+    label: "Phân công của tôi",
+    description: "Danh sách nhóm học phần được phân công",
+    to: "/lecturer/assignments",
+    shortLabel: "PC",
+    icon: ClipboardList,
+  },
+];
+
+export const getNavigationItemsForRole = (role?: string | null) => {
+  if (role === "giang_vien") {
+    return LECTURER_NAV_ITEMS;
+  }
+
+  return ADMIN_NAV_ITEMS;
+};
