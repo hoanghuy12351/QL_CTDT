@@ -91,7 +91,7 @@ export default function LecturerAccountPage() {
     queryFn: lecturerAccountsApi.availableLecturers,
   });
 
-  const rows = listQuery.data?.items ?? [];
+  const rows = useMemo(() => listQuery.data?.items ?? [], [listQuery.data?.items]);
   const pagination = listQuery.data?.pagination ?? {
     page,
     limit,

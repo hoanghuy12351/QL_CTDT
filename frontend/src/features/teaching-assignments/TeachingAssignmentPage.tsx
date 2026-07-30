@@ -258,9 +258,18 @@ export default function TeachingAssignmentPage() {
     enabled: formDisclosure.isOpen && Boolean(selectedRow?.group.courseId),
   });
 
-  const groups = groupsQuery.data?.items ?? [];
-  const assignments = assignmentsQuery.data?.items ?? [];
-  const lecturers = lecturersQuery.data ?? [];
+  const groups = useMemo(
+    () => groupsQuery.data?.items ?? [],
+    [groupsQuery.data?.items],
+  );
+  const assignments = useMemo(
+    () => assignmentsQuery.data?.items ?? [],
+    [assignmentsQuery.data?.items],
+  );
+  const lecturers = useMemo(
+    () => lecturersQuery.data ?? [],
+    [lecturersQuery.data],
+  );
   const assignmentFormLecturers = courseLecturersQuery.data ?? [];
 
   const classOptions = useMemo<SelectOption[]>(() => {
