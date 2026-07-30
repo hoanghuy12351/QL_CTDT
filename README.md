@@ -260,7 +260,9 @@ npm run preview --prefix frontend
 npm run prisma:generate --prefix backend
 npx prisma migrate deploy --schema backend/prisma/schema.prisma
 ```
-
+## Một số giao diện của website
+<img width="1894" height="913" alt="{D0DDC00E-D18B-4FAB-84ED-5B048A038C70}" src="https://github.com/user-attachments/assets/defc6d85-15ec-4952-a926-e297a32dbc24" />
+<img width="1889" height="915" alt="{391B82D0-BEF2-4F94-A862-A8B60859BA3D}" src="https://github.com/user-attachments/assets/c482c08f-1955-455c-860e-de78e21ca3e1" />
 ## Tài liệu
 
 - [Mô tả cơ sở dữ liệu](docs/mo-ta-co-so-du-lieu-qldt.md)
