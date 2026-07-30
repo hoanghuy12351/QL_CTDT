@@ -36,6 +36,24 @@ lerna-debug.log*
 *.tgz
 *.tmp
 *.temp
+*.bak
+
+# Local recovery and cleanup artifacts
+/backup.sql
+/README.txt
+/fix_frontend_backend_mix.ps1
+/frontend/README.txt
+/frontend/fix_frontend_backend_mix.ps1
+
+# Vite boilerplate accidentally copied into the Express backend
+/backend/README.md
+/backend/eslint.config.js
+/backend/index.html
+/backend/public/
+/backend/tsconfig.app.json
+/backend/tsconfig.node.json
+/backend/vercel.json
+/backend/vite.config.ts
 
 # Prisma generated output, if configured locally
 backend/src/generated/prisma/
