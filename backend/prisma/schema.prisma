@@ -14,9 +14,11 @@ model boMon {
   tenBoMon String    @map("ten_bo_mon") @db.VarChar(255)
   ngayTao  DateTime? @default(now()) @map("ngay_tao") @db.DateTime(0)
 
-  khoa      khoa        @relation(fields: [khoaId], references: [khoaId], map: "fk_bo_mon_khoa")
-  giangVien giangVien[]
-  hocPhan   hocPhan[]
+  khoa              khoa                @relation(fields: [khoaId], references: [khoaId], map: "fk_bo_mon_khoa")
+  giangVien         giangVien[]
+  hocPhan           hocPhan[]
+  chuongTrinhDaoTao chuongTrinhDaoTao[]
+  nganhQuanLy       nganh[]             @relation("BoMonQuanLyNganh")
 
   @@index([khoaId], map: "fk_bo_mon_khoa")
   @@map("bo_mon")
@@ -36,18 +38,21 @@ model khoa {
 }
 
 model nganh {
-  nganhId  Int       @id @default(autoincrement()) @map("nganh_id")
-  khoaId   Int       @map("khoa_id")
-  maNganh  String    @map("ma_nganh") @db.VarChar(50)
-  tenNganh String    @map("ten_nganh") @db.VarChar(255)
-  ngayTao  DateTime? @default(now()) @map("ngay_tao") @db.DateTime(0)
+  nganhId       Int       @id @default(autoincrement()) @map("nganh_id")
+  khoaId        Int       @map("khoa_id")
+  boMonQuanLyId Int?      @map("bo_mon_quan_ly_id")
+  maNganh       String    @map("ma_nganh") @db.VarChar(50)
+  tenNganh      String    @map("ten_nganh") @db.VarChar(255)
+  ngayTao       DateTime? @default(now()) @map("ngay_tao") @db.DateTime(0)
 
   khoa              khoa                @relation(fields: [khoaId], references: [khoaId], map: "fk_nganh_khoa")
+  boMonQuanLy       boMon?              @relation("BoMonQuanLyNganh", fields: [boMonQuanLyId], references: [boMonId], map: "fk_nganh_bo_mon_quan_ly")
   chuyenNganh       chuyenNganh[]
   lop               lop[]
   chuongTrinhDaoTao chuongTrinhDaoTao[]
 
   @@index([khoaId], map: "fk_nganh_khoa")
+  @@index([boMonQuanLyId], map: "fk_nganh_bo_mon_quan_ly")
   @@map("nganh")
 }
 
@@ -165,6 +170,7 @@ model giangVien {
   soDienThoai String?             @map("so_dien_thoai") @db.VarChar(20)
   hocVi       String?             @map("hoc_vi") @db.VarChar(100)
   chucDanh    String?             @map("chuc_danh") @db.VarChar(100)
+  chucVu      giangVienChucVu?    @default(giang_vien) @map("chuc_vu")
   dinhMucGio  Decimal?            @default(0.0) @map("dinh_muc_gio") @db.Decimal(8, 1)
   trangThai   giangVienTrangThai? @default(dang_giang_day) @map("trang_thai")
   ngayTao     DateTime?           @default(now()) @map("ngay_tao") @db.DateTime(0)
@@ -173,6 +179,7 @@ model giangVien {
   boMon            boMon?             @relation(fields: [boMonId], references: [boMonId], map: "fk_giang_vien_bo_mon")
   giangVienHocPhan giangVienHocPhan[]
   phanCongGiangDay phanCongGiangDay[]
+  dinhMucGiangVien dinhMucGiangVien[]
 
   @@index([nguoiDungId], map: "fk_giang_vien_nguoi_dung")
   @@index([boMonId], map: "fk_giang_vien_bo_mon")
@@ -180,18 +187,22 @@ model giangVien {
 }
 
 model hocPhan {
-  hocPhanId      Int                 @id @default(autoincrement()) @map("hoc_phan_id")
-  maHocPhan      String              @unique(map: "ma_hoc_phan") @map("ma_hoc_phan") @db.VarChar(50)
-  tenHocPhan     String              @map("ten_hoc_phan") @db.VarChar(255)
-  soTinChi       Decimal             @default(0.0) @map("so_tin_chi") @db.Decimal(4, 1)
-  soTietLyThuyet Int                 @default(0) @map("so_tiet_ly_thuyet")
-  soTietThucHanh Int                 @default(0) @map("so_tiet_thuc_hanh")
-  tongSoTiet     Int                 @default(0) @map("tong_so_tiet")
-  loaiHocPhan    hocPhanLoaiHocPhan? @default(dai_hoc_thong_thuong) @map("loai_hoc_phan")
-  boMonId        Int?                @map("bo_mon_id")
-  moTa           String?             @map("mo_ta") @db.Text
-  ngayTao        DateTime?           @default(now()) @map("ngay_tao") @db.DateTime(0)
-  ngayCapNhat    DateTime?           @default(now()) @map("ngay_cap_nhat") @db.DateTime(0)
+  hocPhanId        Int                 @id @default(autoincrement()) @map("hoc_phan_id")
+  maHocPhan        String              @unique(map: "ma_hoc_phan") @map("ma_hoc_phan") @db.VarChar(50)
+  tenHocPhan       String              @map("ten_hoc_phan") @db.VarChar(255)
+  soTinChi         Decimal             @default(0.0) @map("so_tin_chi") @db.Decimal(4, 1)
+  soTinChiLyThuyet Decimal?            @default(0.0) @map("so_tin_chi_ly_thuyet") @db.Decimal(4, 1)
+  soTinChiThucHanh Decimal?            @default(0.0) @map("so_tin_chi_thuc_hanh") @db.Decimal(4, 1)
+  soTietLyThuyet   Int                 @default(0) @map("so_tiet_ly_thuyet")
+  soTietThucHanh   Int                 @default(0) @map("so_tiet_thuc_hanh")
+  tongSoTiet       Int                 @default(0) @map("tong_so_tiet")
+  heSoSiSo         Decimal?            @default(1.00) @map("he_so_si_so") @db.Decimal(4, 2)
+  heSoDacThu       Decimal?            @default(1.00) @map("he_so_dac_thu") @db.Decimal(4, 2)
+  loaiHocPhan      hocPhanLoaiHocPhan? @default(dai_hoc_thong_thuong) @map("loai_hoc_phan")
+  boMonId          Int?                @map("bo_mon_id")
+  moTa             String?             @map("mo_ta") @db.Text
+  ngayTao          DateTime?           @default(now()) @map("ngay_tao") @db.DateTime(0)
+  ngayCapNhat      DateTime?           @default(now()) @map("ngay_cap_nhat") @db.DateTime(0)
 
   boMon              boMon?               @relation(fields: [boMonId], references: [boMonId], map: "fk_hoc_phan_bo_mon")
   chuongTrinhHocPhan chuongTrinhHocPhan[]
@@ -229,22 +240,24 @@ model namHoc {
 
   keHoachDaoTao    keHoachDaoTao[]
   tienDoHocPhanLop tienDoHocPhanLop[]
+  quyDinhHeSoSiSo  quyDinhHeSoSiSo[]
+  quyDinhTinhGio   quyDinhTinhGio[]
+  dinhMucGiangVien dinhMucGiangVien[]
 
   @@map("nam_hoc")
 }
 
 model hocKy {
-    hocKyId     Int             @id @default(autoincrement()) @map("hoc_ky_id")
-  maHocKy     String          @map("ma_hoc_ky") @db.VarChar(20)
-  tenHocKy    String          @map("ten_hoc_ky") @db.VarChar(100)
-  ngayBatDau  DateTime?       @map("ngay_bat_dau") @db.Date
-  ngayKetThuc DateTime?       @map("ngay_ket_thuc") @db.Date
-  trangThai   hocKyTrangThai? @default(du_thao) @map("trang_thai")
+  hocKyId       Int             @id @default(autoincrement()) @map("hoc_ky_id")
+  maHocKy       String          @map("ma_hoc_ky") @db.VarChar(20)
+  tenHocKy      String          @map("ten_hoc_ky") @db.VarChar(100)
+  thuTuTrongNam Int?            @default(1) @map("thu_tu_trong_nam")
+  trangThai     hocKyTrangThai? @default(du_thao) @map("trang_thai")
 
   keHoachHocKy     keHoachHocKy[]
   tienDoHocPhanLop tienDoHocPhanLop[]
 
-    @@unique([maHocKy], map: "uq_hoc_ky_ma")
+  @@unique([maHocKy], map: "uq_hoc_ky_ma")
   @@map("hoc_ky")
 }
 
@@ -253,8 +266,10 @@ model chuongTrinhDaoTao {
   maChuongTrinh  String                      @unique(map: "ma_chuong_trinh") @map("ma_chuong_trinh") @db.VarChar(50)
   tenChuongTrinh String                      @map("ten_chuong_trinh") @db.VarChar(255)
   nganhId        Int                         @map("nganh_id")
+  boMonId        Int?                        @map("bo_mon_id")
   chuyenNganhId  Int?                        @map("chuyen_nganh_id")
   khoaHocId      Int?                        @map("khoa_hoc_id")
+  soHocKy        Int                         @default(8) @map("so_hoc_ky")
   tongTinChi     Decimal?                    @default(0.0) @map("tong_tin_chi") @db.Decimal(5, 1)
   trinhDoDaoTao  String?                     @map("trinh_do_dao_tao") @db.VarChar(100)
   hinhThucDaoTao String?                     @map("hinh_thuc_dao_tao") @db.VarChar(100)
@@ -264,26 +279,28 @@ model chuongTrinhDaoTao {
   ngayCapNhat    DateTime?                   @default(now()) @map("ngay_cap_nhat") @db.DateTime(0)
 
   nganh              nganh                @relation(fields: [nganhId], references: [nganhId], map: "fk_ctdt_nganh")
+  boMon              boMon?               @relation(fields: [boMonId], references: [boMonId], map: "fk_ctdt_bo_mon")
   chuyenNganh        chuyenNganh?         @relation(fields: [chuyenNganhId], references: [chuyenNganhId], map: "fk_ctdt_chuyen_nganh")
   khoaHoc            khoaHoc?             @relation(fields: [khoaHocId], references: [khoaHocId], map: "fk_ctdt_khoa_hoc")
   chuongTrinhHocPhan chuongTrinhHocPhan[]
   lopChuongTrinh     lopChuongTrinh[]
 
   @@index([nganhId], map: "fk_ctdt_nganh")
+  @@index([boMonId], map: "fk_ctdt_bo_mon")
   @@index([chuyenNganhId], map: "fk_ctdt_chuyen_nganh")
   @@index([khoaHocId], map: "fk_ctdt_khoa_hoc")
   @@map("chuong_trinh_dao_tao")
 }
 
 model chuongTrinhHocPhan {
-  chuongTrinhHocPhanId Int                       @id @default(autoincrement()) @map("chuong_trinh_hoc_phan_id")
-  chuongTrinhId        Int                       @map("chuong_trinh_id")
-  hocPhanId            Int                       @map("hoc_phan_id")
-  hocKyDuKien          Int                       @map("hoc_ky_du_kien")
-  tienDo               chuongTrinhHocPhanTienDo? @default(ca_ky) @map("tien_do")
-  batBuoc              Boolean?                  @default(true) @map("bat_buoc")
-  thuTu                Int?                      @default(0) @map("thu_tu")
-  ghiChu               String?                   @map("ghi_chu") @db.Text
+  chuongTrinhHocPhanId Int      @id @default(autoincrement()) @map("chuong_trinh_hoc_phan_id")
+  chuongTrinhId        Int      @map("chuong_trinh_id")
+  hocPhanId            Int      @map("hoc_phan_id")
+  hocKyDuKien          Int      @map("hoc_ky_du_kien")
+  batBuoc              Boolean? @default(true) @map("bat_buoc")
+  thuTu                Int?     @default(0) @map("thu_tu")
+  dieuKienTienQuyet    String?  @map("dieu_kien_tien_quyet") @db.VarChar(255)
+  ghiChu               String?  @map("ghi_chu") @db.Text
 
   chuongTrinhDaoTao chuongTrinhDaoTao   @relation(fields: [chuongTrinhId], references: [chuongTrinhId], map: "fk_cthp_chuong_trinh")
   hocPhan           hocPhan             @relation(fields: [hocPhanId], references: [hocPhanId], map: "fk_cthp_hoc_phan")
@@ -312,23 +329,25 @@ model lopChuongTrinh {
 }
 
 model tienDoHocPhanLop {
-  tienDoId             Int                           @id @default(autoincrement()) @map("tien_do_id")
-  lopId                Int                           @map("lop_id")
-  chuongTrinhHocPhanId Int                           @map("chuong_trinh_hoc_phan_id")
-  hocKyDuKien          Int                           @map("hoc_ky_du_kien")
-  tienDoDuKien         tienDoHocPhanLopTienDoDuKien? @default(ca_ky) @map("tien_do_du_kien")
-  trangThai            tienDoHocPhanLopTrangThai?    @default(chua_hoc) @map("trang_thai")
-  namHocHoanThanhId    Int?                          @map("nam_hoc_hoan_thanh_id")
-  hocKyHoanThanhId     Int?                          @map("hoc_ky_hoan_thanh_id")
-  ghiChu               String?                       @map("ghi_chu") @db.Text
+  tienDoId             Int                        @id @default(autoincrement()) @map("tien_do_id")
+  lopId                Int                        @map("lop_id")
+  chuongTrinhHocPhanId Int                        @map("chuong_trinh_hoc_phan_id")
+  hocKyDuKien          Int                        @map("hoc_ky_du_kien")
+  trangThai            tienDoHocPhanLopTrangThai? @default(chua_hoc) @map("trang_thai")
+  keHoachHocKyId       Int?                       @map("ke_hoach_hoc_ky_id")
+  namHocHoanThanhId    Int?                       @map("nam_hoc_hoan_thanh_id")
+  hocKyHoanThanhId     Int?                       @map("hoc_ky_hoan_thanh_id")
+  ghiChu               String?                    @map("ghi_chu") @db.Text
 
   lop                lop                @relation(fields: [lopId], references: [lopId], map: "fk_tdhp_lop")
   chuongTrinhHocPhan chuongTrinhHocPhan @relation(fields: [chuongTrinhHocPhanId], references: [chuongTrinhHocPhanId], map: "fk_tdhp_cthp")
+  keHoachHocKy       keHoachHocKy?      @relation(fields: [keHoachHocKyId], references: [keHoachHocKyId], map: "fk_tdhp_ke_hoach_hoc_ky")
   namHoc             namHoc?            @relation(fields: [namHocHoanThanhId], references: [namHocId], map: "fk_tdhp_nam_hoc_ht")
   hocKy              hocKy?             @relation(fields: [hocKyHoanThanhId], references: [hocKyId], map: "fk_tdhp_hoc_ky_ht")
 
   @@unique([lopId, chuongTrinhHocPhanId], map: "uq_tien_do_lop_hoc_phan")
   @@index([chuongTrinhHocPhanId], map: "fk_tdhp_cthp")
+  @@index([keHoachHocKyId], map: "fk_tdhp_ke_hoach_hoc_ky")
   @@index([namHocHoanThanhId], map: "fk_tdhp_nam_hoc_ht")
   @@index([hocKyHoanThanhId], map: "fk_tdhp_hoc_ky_ht")
   @@map("tien_do_hoc_phan_lop")
@@ -373,6 +392,7 @@ model keHoachHocKy {
   keHoachDaoTao     keHoachDaoTao       @relation(fields: [keHoachId], references: [keHoachId], map: "fk_khhk_ke_hoach")
   hocKy             hocKy               @relation(fields: [hocKyId], references: [hocKyId], map: "fk_khhk_hoc_ky")
   keHoachLopHocPhan keHoachLopHocPhan[]
+  tienDoHocPhanLop  tienDoHocPhanLop[]
 
   @@unique([keHoachId, hocKyId], map: "uq_ke_hoach_hoc_ky")
   @@index([hocKyId], map: "fk_khhk_hoc_ky")
@@ -402,7 +422,6 @@ model keHoachLopHocPhan {
   lopId                Int                         @map("lop_id")
   hocPhanId            Int                         @map("hoc_phan_id")
   chuongTrinhHocPhanId Int?                        @map("chuong_trinh_hoc_phan_id")
-  tienDo               keHoachLopHocPhanTienDo?    @default(ca_ky) @map("tien_do")
   siSo                 Int?                        @default(0) @map("si_so")
   coThucHanh           Boolean?                    @default(false) @map("co_thuc_hanh")
   coChiaNhomThucHanh   Boolean?                    @default(false) @map("co_chia_nhom_thuc_hanh")
@@ -444,16 +463,27 @@ model nhomHocPhan {
 }
 
 model phanCongGiangDay {
-  phanCongId     Int                        @id @default(autoincrement()) @map("phan_cong_id")
-  nhomHocPhanId  Int                        @map("nhom_hoc_phan_id")
-  giangVienId    Int                        @map("giang_vien_id")
-  vaiTro         phanCongGiangDayVaiTro?    @default(chinh) @map("vai_tro")
-  soTietPhanCong Decimal?                   @default(0.0) @map("so_tiet_phan_cong") @db.Decimal(6, 1)
-  heSoLop        Decimal?                   @default(1.00) @map("he_so_lop") @db.Decimal(4, 2)
-  soTietQuyDoi   Decimal?                   @default(0.0) @map("so_tiet_quy_doi") @db.Decimal(6, 1)
-  trangThai      phanCongGiangDayTrangThai? @default(du_thao) @map("trang_thai")
-  ghiChu         String?                    @map("ghi_chu") @db.Text
-  ngayTao        DateTime?                  @default(now()) @map("ngay_tao") @db.DateTime(0)
+  phanCongId      Int                        @id @default(autoincrement()) @map("phan_cong_id")
+  nhomHocPhanId   Int                        @map("nhom_hoc_phan_id")
+  giangVienId     Int                        @map("giang_vien_id")
+  vaiTro          phanCongGiangDayVaiTro?    @default(chinh) @map("vai_tro")
+  loaiGiangDay    loaiGiangDay?              @map("loai_giang_day")
+  soTietPhanCong  Decimal?                   @default(0.0) @map("so_tiet_phan_cong") @db.Decimal(6, 1)
+  heSoLop         Decimal?                   @default(1.00) @map("he_so_lop") @db.Decimal(4, 2)
+  soTietQuyDoi    Decimal?                   @default(0.0) @map("so_tiet_quy_doi") @db.Decimal(6, 1)
+  soTinChiTinhGio Decimal?                   @default(0.0) @map("so_tin_chi_tinh_gio") @db.Decimal(4, 1)
+  soTietTinhGio   Int?                       @default(0) @map("so_tiet_tinh_gio")
+  siSo            Int?                       @default(0) @map("si_so")
+  heSoSiSo        Decimal?                   @default(1.00) @map("he_so_si_so") @db.Decimal(4, 2)
+  heSoDacThu      Decimal?                   @default(1.00) @map("he_so_dac_thu") @db.Decimal(4, 2)
+  heSoVaiTro      Decimal?                   @default(1.00) @map("he_so_vai_tro") @db.Decimal(4, 2)
+  gioCoBan        Decimal?                   @default(0.0) @map("gio_co_ban") @db.Decimal(8, 2)
+  gioQuyDoi       Decimal?                   @default(0.0) @map("gio_quy_doi") @db.Decimal(8, 2)
+  canhBao         String?                    @map("canh_bao") @db.Text
+  trangThai       phanCongGiangDayTrangThai? @default(du_thao) @map("trang_thai")
+  ghiChu          String?                    @map("ghi_chu") @db.Text
+  ngayTao         DateTime?                  @default(now()) @map("ngay_tao") @db.DateTime(0)
+  ngayCapNhat     DateTime?                  @default(now()) @map("ngay_cap_nhat") @db.DateTime(0)
 
   nhomHocPhan     nhomHocPhan       @relation(fields: [nhomHocPhanId], references: [nhomHocPhanId], map: "fk_pcgd_nhom_hoc_phan")
   giangVien       giangVien         @relation(fields: [giangVienId], references: [giangVienId], map: "fk_pcgd_giang_vien")
@@ -462,6 +492,63 @@ model phanCongGiangDay {
   @@index([nhomHocPhanId], map: "fk_pcgd_nhom_hoc_phan")
   @@index([giangVienId], map: "fk_pcgd_giang_vien")
   @@map("phan_cong_giang_day")
+}
+
+model quyDinhHeSoSiSo {
+  quyDinhHeSoSiSoId Int               @id @default(autoincrement()) @map("quy_dinh_he_so_si_so_id")
+  loaiGiangDay      loaiGiangDay      @map("loai_giang_day")
+  siSoTu            Int               @map("si_so_tu")
+  siSoDen           Int?              @map("si_so_den")
+  heSo              Decimal           @map("he_so") @db.Decimal(4, 2)
+  maHeSo            String?           @map("ma_he_so") @db.VarChar(20)
+  namHocId          Int?              @map("nam_hoc_id")
+  trangThai         quyDinhTrangThai? @default(dang_ap_dung) @map("trang_thai")
+  ghiChu            String?           @map("ghi_chu") @db.Text
+  ngayTao           DateTime?         @default(now()) @map("ngay_tao") @db.DateTime(0)
+
+  namHoc namHoc? @relation(fields: [namHocId], references: [namHocId], map: "fk_qd_hs_ss_nam_hoc")
+
+  @@unique([loaiGiangDay, siSoTu, siSoDen, namHocId], map: "uq_he_so_si_so")
+  @@index([namHocId], map: "fk_qd_hs_ss_nam_hoc")
+  @@map("quy_dinh_he_so_si_so")
+}
+
+model quyDinhTinhGio {
+  quyDinhTinhGioId Int               @id @default(autoincrement()) @map("quy_dinh_tinh_gio_id")
+  loaiGiangDay     loaiGiangDay      @map("loai_giang_day")
+  donViTinh        donViTinhGio      @map("don_vi_tinh")
+  gioCoBan         Decimal           @map("gio_co_ban") @db.Decimal(8, 2)
+  namHocId         Int?              @map("nam_hoc_id")
+  trangThai        quyDinhTrangThai? @default(dang_ap_dung) @map("trang_thai")
+  moTa             String?           @map("mo_ta") @db.Text
+  ngayTao          DateTime?         @default(now()) @map("ngay_tao") @db.DateTime(0)
+
+  namHoc namHoc? @relation(fields: [namHocId], references: [namHocId], map: "fk_qd_tinh_gio_nam_hoc")
+
+  @@unique([loaiGiangDay, donViTinh, namHocId], map: "uq_quy_dinh_tinh_gio")
+  @@index([namHocId], map: "fk_qd_tinh_gio_nam_hoc")
+  @@map("quy_dinh_tinh_gio")
+}
+
+model dinhMucGiangVien {
+  dinhMucId    Int           @id @default(autoincrement()) @map("dinh_muc_id")
+  giangVienId  Int           @map("giang_vien_id")
+  namHocId     Int           @map("nam_hoc_id")
+  loaiDinhMuc  loaiDinhMucGV @default(giang_vien_thuong) @map("loai_dinh_muc")
+  tyLeDinhMuc  Decimal       @default(100.00) @map("ty_le_dinh_muc") @db.Decimal(5, 2)
+  gioTieuChuan Decimal       @default(270.0) @map("gio_tieu_chuan") @db.Decimal(8, 1)
+  gioMienGiam  Decimal       @default(0.0) @map("gio_mien_giam") @db.Decimal(8, 1)
+  gioPhaiDay   Decimal       @default(270.0) @map("gio_phai_day") @db.Decimal(8, 1)
+  ghiChu       String?       @map("ghi_chu") @db.Text
+  ngayTao      DateTime?     @default(now()) @map("ngay_tao") @db.DateTime(0)
+  ngayCapNhat  DateTime?     @default(now()) @updatedAt @map("ngay_cap_nhat") @db.DateTime(0)
+
+  giangVien giangVien @relation(fields: [giangVienId], references: [giangVienId], map: "fk_dmgv_giang_vien")
+  namHoc    namHoc    @relation(fields: [namHocId], references: [namHocId], map: "fk_dmgv_nam_hoc")
+
+  @@unique([giangVienId, namHocId], map: "uq_dinh_muc_gv_nam_hoc")
+  @@index([namHocId], map: "fk_dmgv_nam_hoc")
+  @@map("dinh_muc_giang_vien")
 }
 
 model lichDayTheoTuan {
@@ -484,6 +571,56 @@ model lichDayTheoTuan {
   @@map("lich_day_theo_tuan")
 }
 
+enum giangVienChucVu {
+  giang_vien
+  tro_giang
+  pho_truong_bo_mon
+  truong_bo_mon
+  pho_truong_khoa
+  truong_khoa
+  khac
+
+  @@map("giang_vien_chuc_vu")
+}
+
+enum loaiDinhMucGV {
+  giang_vien_thuong
+  truong_bo_mon
+  pho_truong_bo_mon
+  tro_giang
+
+  @@map("loai_dinh_muc_gv")
+}
+
+enum loaiGiangDay {
+  ly_thuyet
+  thuc_hanh
+  bai_tap
+  do_an
+  thuc_tap
+  tot_nghiep
+  khac
+
+  @@map("loai_giang_day")
+}
+
+enum donViTinhGio {
+  tin_chi
+  tiet
+  hoc_phan
+  sinh_vien
+  khac
+
+  @@map("don_vi_tinh_gio")
+}
+
+enum quyDinhTrangThai {
+  dang_ap_dung
+  ngung_ap_dung
+
+  @@map("quy_dinh_trang_thai")
+}
+
 enum phanCongGiangDayVaiTro {
   chinh
   tro_giang
@@ -504,6 +641,7 @@ enum chuongTrinhHocPhanTienDo {
 
 enum keHoachHocKyTrangThai {
   du_thao
+  da_duyet
   dang_thuc_hien
   da_dong
 
