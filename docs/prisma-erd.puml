@@ -1,0 +1,368 @@
+@startuml PrismaERD
+title ERD - He thong quan ly chuong trinh dao tao
+
+left to right direction
+hide circle
+skinparam linetype ortho
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam classAttributeIconSize 0
+skinparam defaultFontSize 11
+skinparam classFontSize 11
+skinparam classAttributeFontSize 10
+skinparam nodesep 26
+skinparam ranksep 34
+
+entity "khoa" as khoa {
+  * khoa_id : INT <<PK>>
+  --
+  ma_khoa : VARCHAR(50) <<UK>>
+  ten_khoa : VARCHAR(255)
+  ngay_tao : DATETIME
+}
+
+entity "bo_mon" as bo_mon {
+  * bo_mon_id : INT <<PK>>
+  --
+  khoa_id : INT <<FK>>
+  ma_bo_mon : VARCHAR(50)
+  ten_bo_mon : VARCHAR(255)
+  ngay_tao : DATETIME
+}
+
+entity "nganh" as nganh {
+  * nganh_id : INT <<PK>>
+  --
+  khoa_id : INT <<FK>>
+  bo_mon_quan_ly_id : INT <<FK>>
+  ma_nganh : VARCHAR(50)
+  ten_nganh : VARCHAR(255)
+  ngay_tao : DATETIME
+}
+
+entity "chuyen_nganh" as chuyen_nganh {
+  * chuyen_nganh_id : INT <<PK>>
+  --
+  nganh_id : INT <<FK>>
+  ma_chuyen_nganh : VARCHAR(50)
+  ten_chuyen_nganh : VARCHAR(255)
+  ngay_tao : DATETIME
+}
+
+entity "co_so" as co_so {
+  * co_so_id : INT <<PK>>
+  --
+  ma_co_so : VARCHAR(50) <<UK>>
+  ten_co_so : VARCHAR(255)
+  dia_chi : VARCHAR(255)
+}
+
+entity "phong_hoc" as phong_hoc {
+  * phong_hoc_id : INT <<PK>>
+  --
+  co_so_id : INT <<FK>>
+  ma_phong : VARCHAR(50)
+  ten_phong : VARCHAR(100)
+  suc_chua : INT
+  loai_phong : ENUM
+}
+
+entity "khoa_hoc" as khoa_hoc {
+  * khoa_hoc_id : INT <<PK>>
+  --
+  ma_khoa_hoc : VARCHAR(50) <<UK>>
+  ten_khoa_hoc : VARCHAR(100)
+  nam_bat_dau : INT
+  nam_ket_thuc : INT
+}
+
+entity "lop" as lop {
+  * lop_id : INT <<PK>>
+  --
+  khoa_hoc_id : INT <<FK>>
+  nganh_id : INT <<FK>>
+  chuyen_nganh_id : INT <<FK>>
+  co_so_id : INT <<FK>>
+  ma_lop : VARCHAR(50) <<UK>>
+  ten_lop : VARCHAR(100)
+  si_so : INT
+  trang_thai : ENUM
+}
+
+entity "nguoi_dung" as nguoi_dung {
+  * nguoi_dung_id : INT <<PK>>
+  --
+  email : VARCHAR(255) <<UK>>
+  mat_khau_hash : VARCHAR(255)
+  ho_ten : VARCHAR(150)
+  vai_tro : ENUM
+  trang_thai : ENUM
+}
+
+entity "giang_vien" as giang_vien {
+  * giang_vien_id : INT <<PK>>
+  --
+  nguoi_dung_id : INT <<FK>>
+  bo_mon_id : INT <<FK>>
+  ma_giang_vien : VARCHAR(50) <<UK>>
+  ho_ten : VARCHAR(150)
+  email : VARCHAR(150)
+  chuc_vu : ENUM
+  dinh_muc_gio : DECIMAL
+  trang_thai : ENUM
+}
+
+entity "hoc_phan" as hoc_phan {
+  * hoc_phan_id : INT <<PK>>
+  --
+  bo_mon_id : INT <<FK>>
+  ma_hoc_phan : VARCHAR(50) <<UK>>
+  ten_hoc_phan : VARCHAR(255)
+  so_tin_chi : DECIMAL
+  so_tiet_ly_thuyet : INT
+  so_tiet_thuc_hanh : INT
+  tong_so_tiet : INT
+  loai_hoc_phan : ENUM
+}
+
+entity "giang_vien_hoc_phan" as giang_vien_hoc_phan {
+  * giang_vien_hoc_phan_id : INT <<PK>>
+  --
+  giang_vien_id : INT <<FK>>
+  hoc_phan_id : INT <<FK>>
+  co_the_day_ly_thuyet : BOOLEAN
+  co_the_day_thuc_hanh : BOOLEAN
+  muc_do_uu_tien : INT
+}
+
+entity "nam_hoc" as nam_hoc {
+  * nam_hoc_id : INT <<PK>>
+  --
+  ma_nam_hoc : VARCHAR(20) <<UK>>
+  ngay_bat_dau : DATE
+  ngay_ket_thuc : DATE
+  trang_thai : ENUM
+}
+
+entity "hoc_ky" as hoc_ky {
+  * hoc_ky_id : INT <<PK>>
+  --
+  ma_hoc_ky : VARCHAR(20)
+  ten_hoc_ky : VARCHAR(100)
+  thu_tu_trong_nam : INT
+  trang_thai : ENUM
+}
+
+entity "chuong_trinh_dao_tao" as chuong_trinh_dao_tao {
+  * chuong_trinh_id : INT <<PK>>
+  --
+  nganh_id : INT <<FK>>
+  bo_mon_id : INT <<FK>>
+  chuyen_nganh_id : INT <<FK>>
+  khoa_hoc_id : INT <<FK>>
+  ma_chuong_trinh : VARCHAR(50) <<UK>>
+  ten_chuong_trinh : VARCHAR(255)
+  so_hoc_ky : INT
+  tong_tin_chi : DECIMAL
+  trang_thai : ENUM
+}
+
+entity "chuong_trinh_hoc_phan" as chuong_trinh_hoc_phan {
+  * chuong_trinh_hoc_phan_id : INT <<PK>>
+  --
+  chuong_trinh_id : INT <<FK>>
+  hoc_phan_id : INT <<FK>>
+  hoc_ky_du_kien : INT
+  bat_buoc : BOOLEAN
+  thu_tu : INT
+  dieu_kien_tien_quyet : VARCHAR(255)
+}
+
+entity "lop_chuong_trinh" as lop_chuong_trinh {
+  * lop_chuong_trinh_id : INT <<PK>>
+  --
+  lop_id : INT <<FK>>
+  chuong_trinh_id : INT <<FK>>
+  ngay_ap_dung : DATE
+  trang_thai : ENUM
+}
+
+entity "tien_do_hoc_phan_lop" as tien_do_hoc_phan_lop {
+  * tien_do_id : INT <<PK>>
+  --
+  lop_id : INT <<FK>>
+  chuong_trinh_hoc_phan_id : INT <<FK>>
+  ke_hoach_hoc_ky_id : INT <<FK>>
+  nam_hoc_hoan_thanh_id : INT <<FK>>
+  hoc_ky_hoan_thanh_id : INT <<FK>>
+  hoc_ky_du_kien : INT
+  trang_thai : ENUM
+}
+
+entity "ke_hoach_dao_tao" as ke_hoach_dao_tao {
+  * ke_hoach_id : INT <<PK>>
+  --
+  nam_hoc_id : INT <<FK>>
+  khoa_id : INT <<FK>>
+  nguoi_tao_id : INT <<FK>>
+  nguoi_duyet_id : INT <<FK>>
+  ma_ke_hoach : VARCHAR(50) <<UK>>
+  ten_ke_hoach : VARCHAR(255)
+  trang_thai : ENUM
+}
+
+entity "ke_hoach_hoc_ky" as ke_hoach_hoc_ky {
+  * ke_hoach_hoc_ky_id : INT <<PK>>
+  --
+  ke_hoach_id : INT <<FK>>
+  hoc_ky_id : INT <<FK>>
+  ten_ke_hoach_hoc_ky : VARCHAR(255)
+  trang_thai : ENUM
+}
+
+entity "tuan_dao_tao" as tuan_dao_tao {
+  * tuan_id : INT <<PK>>
+  --
+  ke_hoach_id : INT <<FK>>
+  so_tuan : INT
+  ten_tuan : VARCHAR(50)
+  ngay_bat_dau : DATE
+  ngay_ket_thuc : DATE
+  loai_tuan : ENUM
+}
+
+entity "ke_hoach_lop_hoc_phan" as ke_hoach_lop_hoc_phan {
+  * ke_hoach_lop_hoc_phan_id : INT <<PK>>
+  --
+  ke_hoach_hoc_ky_id : INT <<FK>>
+  lop_id : INT <<FK>>
+  hoc_phan_id : INT <<FK>>
+  chuong_trinh_hoc_phan_id : INT <<FK>>
+  si_so : INT
+  co_thuc_hanh : BOOLEAN
+  co_chia_nhom_thuc_hanh : BOOLEAN
+  trang_thai : ENUM
+}
+
+entity "nhom_hoc_phan" as nhom_hoc_phan {
+  * nhom_hoc_phan_id : INT <<PK>>
+  --
+  ke_hoach_lop_hoc_phan_id : INT <<FK>>
+  ma_nhom : VARCHAR(50)
+  ten_nhom : VARCHAR(100)
+  loai_nhom : ENUM
+  si_so : INT
+  so_tiet : INT
+}
+
+entity "phan_cong_giang_day" as phan_cong_giang_day {
+  * phan_cong_id : INT <<PK>>
+  --
+  nhom_hoc_phan_id : INT <<FK>>
+  giang_vien_id : INT <<FK>>
+  vai_tro : ENUM
+  loai_giang_day : ENUM
+  so_tiet_phan_cong : DECIMAL
+  he_so_lop : DECIMAL
+  so_tiet_quy_doi : DECIMAL
+  gio_quy_doi : DECIMAL
+  trang_thai : ENUM
+}
+
+entity "lich_day_theo_tuan" as lich_day_theo_tuan {
+  * lich_tuan_id : INT <<PK>>
+  --
+  phan_cong_id : INT <<FK>>
+  tuan_id : INT <<FK>>
+  phong_hoc_id : INT <<FK>>
+  so_tiet : DECIMAL
+  noi_dung_giang_day : TEXT
+}
+
+entity "quy_dinh_he_so_si_so" as quy_dinh_he_so_si_so {
+  * quy_dinh_he_so_si_so_id : INT <<PK>>
+  --
+  nam_hoc_id : INT <<FK>>
+  loai_giang_day : ENUM
+  si_so_tu : INT
+  si_so_den : INT
+  he_so : DECIMAL
+  trang_thai : ENUM
+}
+
+entity "quy_dinh_tinh_gio" as quy_dinh_tinh_gio {
+  * quy_dinh_tinh_gio_id : INT <<PK>>
+  --
+  nam_hoc_id : INT <<FK>>
+  loai_giang_day : ENUM
+  don_vi_tinh : ENUM
+  gio_co_ban : DECIMAL
+  trang_thai : ENUM
+}
+
+entity "dinh_muc_giang_vien" as dinh_muc_giang_vien {
+  * dinh_muc_id : INT <<PK>>
+  --
+  giang_vien_id : INT <<FK>>
+  nam_hoc_id : INT <<FK>>
+  loai_dinh_muc : ENUM
+  ty_le_dinh_muc : DECIMAL
+  gio_tieu_chuan : DECIMAL
+  gio_mien_giam : DECIMAL
+  gio_phai_day : DECIMAL
+}
+
+khoa ||--o{ bo_mon
+khoa ||--o{ nganh
+bo_mon |o--o{ nganh
+nganh ||--o{ chuyen_nganh
+co_so ||--o{ phong_hoc
+khoa_hoc ||--o{ lop
+nganh ||--o{ lop
+chuyen_nganh |o--o{ lop
+co_so |o--o{ lop
+
+nguoi_dung |o--o{ giang_vien
+bo_mon |o--o{ giang_vien
+bo_mon |o--o{ hoc_phan
+giang_vien ||--o{ giang_vien_hoc_phan
+hoc_phan ||--o{ giang_vien_hoc_phan
+
+nganh ||--o{ chuong_trinh_dao_tao
+bo_mon |o--o{ chuong_trinh_dao_tao
+chuyen_nganh |o--o{ chuong_trinh_dao_tao
+khoa_hoc |o--o{ chuong_trinh_dao_tao
+chuong_trinh_dao_tao ||--o{ chuong_trinh_hoc_phan
+hoc_phan ||--o{ chuong_trinh_hoc_phan
+lop ||--o{ lop_chuong_trinh
+chuong_trinh_dao_tao ||--o{ lop_chuong_trinh
+lop ||--o{ tien_do_hoc_phan_lop
+chuong_trinh_hoc_phan ||--o{ tien_do_hoc_phan_lop
+
+nam_hoc ||--o{ ke_hoach_dao_tao
+khoa ||--o{ ke_hoach_dao_tao
+nguoi_dung |o--o{ ke_hoach_dao_tao
+ke_hoach_dao_tao ||--o{ ke_hoach_hoc_ky
+hoc_ky ||--o{ ke_hoach_hoc_ky
+ke_hoach_dao_tao ||--o{ tuan_dao_tao
+ke_hoach_hoc_ky |o--o{ tien_do_hoc_phan_lop
+nam_hoc |o--o{ tien_do_hoc_phan_lop
+hoc_ky |o--o{ tien_do_hoc_phan_lop
+
+ke_hoach_hoc_ky ||--o{ ke_hoach_lop_hoc_phan
+lop ||--o{ ke_hoach_lop_hoc_phan
+hoc_phan ||--o{ ke_hoach_lop_hoc_phan
+chuong_trinh_hoc_phan |o--o{ ke_hoach_lop_hoc_phan
+ke_hoach_lop_hoc_phan ||--o{ nhom_hoc_phan
+nhom_hoc_phan ||--o{ phan_cong_giang_day
+giang_vien ||--o{ phan_cong_giang_day
+phan_cong_giang_day ||--o{ lich_day_theo_tuan
+tuan_dao_tao ||--o{ lich_day_theo_tuan
+phong_hoc |o--o{ lich_day_theo_tuan
+
+nam_hoc |o--o{ quy_dinh_he_so_si_so
+nam_hoc |o--o{ quy_dinh_tinh_gio
+giang_vien ||--o{ dinh_muc_giang_vien
+nam_hoc ||--o{ dinh_muc_giang_vien
+
+@enduml

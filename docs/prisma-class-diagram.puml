@@ -1,0 +1,571 @@
+@startuml PrismaClassDiagram
+title Prisma Class Diagram
+
+left to right direction
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam packageStyle rectangle
+
+' Source: backend/prisma/schema.prisma
+' Convention:
+' - Parent-side multiplicity 1 means required, 0..1 means optional.
+' - Child-side multiplicity 0..* means one-to-many.
+' - Join tables are modeled as classes to preserve their attributes.
+
+class khoa {
+  +khoaId: Int
+  +maKhoa: String
+  +tenKhoa: String
+  +ngayTao: DateTime?
+  --
+  +createKhoa()
+  +updateKhoa()
+  +deleteKhoa()
+  +getBoMon()
+  +getNganh()
+}
+
+class boMon {
+  +boMonId: Int
+  +khoaId: Int
+  +maBoMon: String
+  +tenBoMon: String
+  +ngayTao: DateTime?
+  --
+  +createBoMon()
+  +updateBoMon()
+  +deleteBoMon()
+  +assignGiangVien()
+  +getHocPhan()
+}
+
+class nganh {
+  +nganhId: Int
+  +khoaId: Int
+  +boMonQuanLyId: Int?
+  +maNganh: String
+  +tenNganh: String
+  +ngayTao: DateTime?
+  --
+  +createNganh()
+  +updateNganh()
+  +setBoMonQuanLy()
+  +getChuyenNganh()
+  +getChuongTrinhDaoTao()
+}
+
+class chuyenNganh {
+  +chuyenNganhId: Int
+  +nganhId: Int
+  +maChuyenNganh: String?
+  +tenChuyenNganh: String
+  +ngayTao: DateTime?
+  --
+  +createChuyenNganh()
+  +updateChuyenNganh()
+  +deleteChuyenNganh()
+  +getLop()
+  +getChuongTrinhDaoTao()
+}
+
+class coSo {
+  +coSoId: Int
+  +maCoSo: String
+  +tenCoSo: String
+  +diaChi: String?
+  --
+  +createCoSo()
+  +updateCoSo()
+  +deleteCoSo()
+  +getPhongHoc()
+  +getLop()
+}
+
+class phongHoc {
+  +phongHocId: Int
+  +coSoId: Int
+  +maPhong: String
+  +tenPhong: String?
+  +sucChua: Int?
+  +loaiPhong: phongHocLoaiPhong?
+  --
+  +createPhongHoc()
+  +updatePhongHoc()
+  +deletePhongHoc()
+  +kiemTraSucChua()
+  +getLichDayTheoTuan()
+}
+
+class khoaHoc {
+  +khoaHocId: Int
+  +maKhoaHoc: String
+  +tenKhoaHoc: String
+  +namBatDau: Int
+  +namKetThuc: Int
+  --
+  +createKhoaHoc()
+  +updateKhoaHoc()
+  +deleteKhoaHoc()
+  +getLop()
+  +getChuongTrinhDaoTao()
+}
+
+class lop {
+  +lopId: Int
+  +maLop: String
+  +tenLop: String
+  +khoaHocId: Int
+  +nganhId: Int
+  +chuyenNganhId: Int?
+  +coSoId: Int?
+  +heDaoTao: String?
+  +siSo: Int?
+  +thoiGianNhapHoc: String?
+  +thoiGianTotNghiep: String?
+  +trangThai: lopTrangThai?
+  +ghiChu: String?
+  +ngayTao: DateTime?
+  --
+  +createLop()
+  +updateLop()
+  +capNhatSiSo()
+  +ganChuongTrinh()
+  +lapTienDoHocPhan()
+}
+
+class nguoiDung {
+  +nguoiDungId: Int
+  +email: String
+  +matKhauHash: String
+  +hoTen: String
+  +vaiTro: nguoiDungVaiTro
+  +trangThai: nguoiDungTrangThai
+  +ngayTao: DateTime?
+  +ngayCapNhat: DateTime?
+  --
+  +createNguoiDung()
+  +updateNguoiDung()
+  +doiMatKhau()
+  +khoaTaiKhoan()
+  +moKhoaTaiKhoan()
+}
+
+class giangVien {
+  +giangVienId: Int
+  +nguoiDungId: Int?
+  +boMonId: Int?
+  +maGiangVien: String?
+  +hoTen: String
+  +email: String?
+  +soDienThoai: String?
+  +hocVi: String?
+  +chucDanh: String?
+  +chucVu: giangVienChucVu?
+  +dinhMucGio: Decimal?
+  +trangThai: giangVienTrangThai?
+  +ngayTao: DateTime?
+  --
+  +createGiangVien()
+  +updateGiangVien()
+  +ganBoMon()
+  +dangKyDayHocPhan()
+  +tinhDinhMuc()
+}
+
+class hocPhan {
+  +hocPhanId: Int
+  +maHocPhan: String
+  +tenHocPhan: String
+  +soTinChi: Decimal
+  +soTinChiLyThuyet: Decimal?
+  +soTinChiThucHanh: Decimal?
+  +soTietLyThuyet: Int
+  +soTietThucHanh: Int
+  +tongSoTiet: Int
+  +heSoSiSo: Decimal?
+  +heSoDacThu: Decimal?
+  +loaiHocPhan: hocPhanLoaiHocPhan?
+  +boMonId: Int?
+  +moTa: String?
+  +ngayTao: DateTime?
+  +ngayCapNhat: DateTime?
+  --
+  +createHocPhan()
+  +updateHocPhan()
+  +deleteHocPhan()
+  +tinhTongSoTiet()
+  +capNhatHeSo()
+}
+
+class giangVienHocPhan {
+  +giangVienHocPhanId: Int
+  +giangVienId: Int
+  +hocPhanId: Int
+  +coTheDayLyThuyet: Boolean?
+  +coTheDayThucHanh: Boolean?
+  +mucDoUuTien: Int?
+  +ghiChu: String?
+  --
+  +createPhanQuyenDay()
+  +updateMucDoUuTien()
+  +kiemTraCoTheDay()
+  +removePhanQuyenDay()
+}
+
+class namHoc {
+  +namHocId: Int
+  +maNamHoc: String
+  +ngayBatDau: DateTime?
+  +ngayKetThuc: DateTime?
+  +trangThai: namHocTrangThai?
+  +ngayTao: DateTime?
+  --
+  +createNamHoc()
+  +updateNamHoc()
+  +moNamHoc()
+  +dongNamHoc()
+  +getKeHoachDaoTao()
+}
+
+class hocKy {
+  +hocKyId: Int
+  +maHocKy: String
+  +tenHocKy: String
+  +thuTuTrongNam: Int?
+  +trangThai: hocKyTrangThai?
+  --
+  +createHocKy()
+  +updateHocKy()
+  +moHocKy()
+  +dongHocKy()
+  +getKeHoachHocKy()
+}
+
+class chuongTrinhDaoTao {
+  +chuongTrinhId: Int
+  +maChuongTrinh: String
+  +tenChuongTrinh: String
+  +nganhId: Int
+  +boMonId: Int?
+  +chuyenNganhId: Int?
+  +khoaHocId: Int?
+  +soHocKy: Int
+  +tongTinChi: Decimal?
+  +trinhDoDaoTao: String?
+  +hinhThucDaoTao: String?
+  +trangThai: chuongTrinhDaoTaoTrangThai?
+  +moTa: String?
+  +ngayTao: DateTime?
+  +ngayCapNhat: DateTime?
+  --
+  +createChuongTrinh()
+  +updateChuongTrinh()
+  +themHocPhan()
+  +tinhTongTinChi()
+  +apDungChoLop()
+}
+
+class chuongTrinhHocPhan {
+  +chuongTrinhHocPhanId: Int
+  +chuongTrinhId: Int
+  +hocPhanId: Int
+  +hocKyDuKien: Int
+  +batBuoc: Boolean?
+  +thuTu: Int?
+  +dieuKienTienQuyet: String?
+  +ghiChu: String?
+  --
+  +createChuongTrinhHocPhan()
+  +updateChuongTrinhHocPhan()
+  +datBatBuoc()
+  +capNhatHocKyDuKien()
+  +kiemTraDieuKienTienQuyet()
+}
+
+class lopChuongTrinh {
+  +lopChuongTrinhId: Int
+  +lopId: Int
+  +chuongTrinhId: Int
+  +ngayApDung: DateTime?
+  +trangThai: lopChuongTrinhTrangThai?
+  +ghiChu: String?
+  --
+  +createLopChuongTrinh()
+  +apDung()
+  +ngungApDung()
+  +updateGhiChu()
+}
+
+class tienDoHocPhanLop {
+  +tienDoId: Int
+  +lopId: Int
+  +chuongTrinhHocPhanId: Int
+  +hocKyDuKien: Int
+  +trangThai: tienDoHocPhanLopTrangThai?
+  +keHoachHocKyId: Int?
+  +namHocHoanThanhId: Int?
+  +hocKyHoanThanhId: Int?
+  +ghiChu: String?
+  --
+  +createTienDo()
+  +lenKeHoach()
+  +danhDauDangHoc()
+  +danhDauHoanThanh()
+  +huyTienDo()
+}
+
+class keHoachDaoTao {
+  +keHoachId: Int
+  +namHocId: Int
+  +khoaId: Int
+  +maKeHoach: String
+  +tenKeHoach: String
+  +trangThai: keHoachDaoTaoTrangThai?
+  +ghiChu: String?
+  +nguoiTaoId: Int?
+  +nguoiDuyetId: Int?
+  +ngayTao: DateTime?
+  +ngayCapNhat: DateTime?
+  --
+  +createKeHoach()
+  +updateKeHoach()
+  +duyetKeHoach()
+  +dongKeHoach()
+  +themTuanDaoTao()
+}
+
+class keHoachHocKy {
+  +keHoachHocKyId: Int
+  +keHoachId: Int
+  +hocKyId: Int
+  +tenKeHoachHocKy: String?
+  +trangThai: keHoachHocKyTrangThai?
+  +ghiChu: String?
+  --
+  +createKeHoachHocKy()
+  +updateKeHoachHocKy()
+  +themLopHocPhan()
+  +duyetKeHoachHocKy()
+  +dongKeHoachHocKy()
+}
+
+class tuanDaoTao {
+  +tuanId: Int
+  +keHoachId: Int
+  +soTuan: Int
+  +tenTuan: String?
+  +ngayBatDau: DateTime?
+  +ngayKetThuc: DateTime?
+  +loaiTuan: tuanDaoTaoLoaiTuan?
+  +ghiChu: String?
+  --
+  +createTuanDaoTao()
+  +updateTuanDaoTao()
+  +capNhatThoiGian()
+  +doiLoaiTuan()
+  +getLichDayTheoTuan()
+}
+
+class keHoachLopHocPhan {
+  +keHoachLopHocPhanId: Int
+  +keHoachHocKyId: Int
+  +lopId: Int
+  +hocPhanId: Int
+  +chuongTrinhHocPhanId: Int?
+  +siSo: Int?
+  +coThucHanh: Boolean?
+  +coChiaNhomThucHanh: Boolean?
+  +soNhomThucHanh: Int?
+  +nguonTao: keHoachLopHocPhanNguonTao?
+  +lyDoThem: String?
+  +trangThai: keHoachLopHocPhanTrangThai?
+  +ghiChu: String?
+  +ngayTao: DateTime?
+  --
+  +createKeHoachLopHocPhan()
+  +updateKeHoachLopHocPhan()
+  +taoNhom()
+  +chiaNhomThucHanh()
+  +capNhatTrangThai()
+}
+
+class nhomHocPhan {
+  +nhomHocPhanId: Int
+  +keHoachLopHocPhanId: Int
+  +maNhom: String
+  +tenNhom: String?
+  +loaiNhom: nhomHocPhanLoaiNhom
+  +siSo: Int?
+  +soTiet: Int?
+  +ghiChu: String?
+  --
+  +createNhomHocPhan()
+  +updateNhomHocPhan()
+  +capNhatSiSo()
+  +ganGiangVien()
+  +getPhanCongGiangDay()
+}
+
+class phanCongGiangDay {
+  +phanCongId: Int
+  +nhomHocPhanId: Int
+  +giangVienId: Int
+  +vaiTro: phanCongGiangDayVaiTro?
+  +loaiGiangDay: loaiGiangDay?
+  +soTietPhanCong: Decimal?
+  +heSoLop: Decimal?
+  +soTietQuyDoi: Decimal?
+  +soTinChiTinhGio: Decimal?
+  +soTietTinhGio: Int?
+  +siSo: Int?
+  +heSoSiSo: Decimal?
+  +heSoDacThu: Decimal?
+  +heSoVaiTro: Decimal?
+  +gioCoBan: Decimal?
+  +gioQuyDoi: Decimal?
+  +canhBao: String?
+  +trangThai: phanCongGiangDayTrangThai?
+  +ghiChu: String?
+  +ngayTao: DateTime?
+  +ngayCapNhat: DateTime?
+  --
+  +createPhanCong()
+  +updatePhanCong()
+  +tinhGioQuyDoi()
+  +xacNhanPhanCong()
+  +huyPhanCong()
+}
+
+class quyDinhHeSoSiSo {
+  +quyDinhHeSoSiSoId: Int
+  +loaiGiangDay: loaiGiangDay
+  +siSoTu: Int
+  +siSoDen: Int?
+  +heSo: Decimal
+  +maHeSo: String?
+  +namHocId: Int?
+  +trangThai: quyDinhTrangThai?
+  +ghiChu: String?
+  +ngayTao: DateTime?
+  --
+  +createQuyDinh()
+  +updateQuyDinh()
+  +tinhHeSo()
+  +apDung()
+  +ngungApDung()
+}
+
+class quyDinhTinhGio {
+  +quyDinhTinhGioId: Int
+  +loaiGiangDay: loaiGiangDay
+  +donViTinh: donViTinhGio
+  +gioCoBan: Decimal
+  +namHocId: Int?
+  +trangThai: quyDinhTrangThai?
+  +moTa: String?
+  +ngayTao: DateTime?
+  --
+  +createQuyDinh()
+  +updateQuyDinh()
+  +tinhGioCoBan()
+  +apDung()
+  +ngungApDung()
+}
+
+class dinhMucGiangVien {
+  +dinhMucId: Int
+  +giangVienId: Int
+  +namHocId: Int
+  +loaiDinhMuc: loaiDinhMucGV
+  +tyLeDinhMuc: Decimal
+  +gioTieuChuan: Decimal
+  +gioMienGiam: Decimal
+  +gioPhaiDay: Decimal
+  +ghiChu: String?
+  +ngayTao: DateTime?
+  +ngayCapNhat: DateTime?
+  --
+  +createDinhMuc()
+  +updateDinhMuc()
+  +capNhatMienGiam()
+  +tinhGioPhaiDay()
+  +kiemTraVuotDinhMuc()
+}
+
+class lichDayTheoTuan {
+  +lichTuanId: Int
+  +phanCongId: Int
+  +tuanId: Int
+  +phongHocId: Int?
+  +soTiet: Decimal
+  +noiDungGiangDay: String?
+  +ghiChu: String?
+  +ngayTao: DateTime?
+  --
+  +createLichDay()
+  +updateLichDay()
+  +sapXepPhong()
+  +capNhatSoTiet()
+  +kiemTraTrungLich()
+}
+
+' Co cau to chuc - danh muc
+khoa "1" *-- "0..*" boMon
+khoa "1" *-- "0..*" nganh
+boMon "0..1" o-- "0..*" nganh
+nganh "1" *-- "0..*" chuyenNganh
+coSo "1" *-- "0..*" phongHoc
+khoaHoc "1" *-- "0..*" lop
+nganh "1" o-- "0..*" lop
+chuyenNganh "0..1" o-- "0..*" lop
+coSo "0..1" o-- "0..*" lop
+
+' Nguoi dung - giang vien - hoc phan
+nguoiDung "0..1" -- "0..*" giangVien
+boMon "0..1" o-- "0..*" giangVien
+boMon "0..1" o-- "0..*" hocPhan
+giangVien "1" -- "0..*" giangVienHocPhan
+hocPhan "1" -- "0..*" giangVienHocPhan
+
+' Chuong trinh dao tao
+nganh "1" o-- "0..*" chuongTrinhDaoTao
+boMon "0..1" o-- "0..*" chuongTrinhDaoTao
+chuyenNganh "0..1" o-- "0..*" chuongTrinhDaoTao
+khoaHoc "0..1" o-- "0..*" chuongTrinhDaoTao
+chuongTrinhDaoTao "1" *-- "0..*" chuongTrinhHocPhan
+hocPhan "1" o-- "0..*" chuongTrinhHocPhan
+lop "1" -- "0..*" lopChuongTrinh
+chuongTrinhDaoTao "1" -- "0..*" lopChuongTrinh
+lop "1" *-- "0..*" tienDoHocPhanLop
+chuongTrinhHocPhan "1" -- "0..*" tienDoHocPhanLop
+
+' Ke hoach dao tao
+namHoc "1" o-- "0..*" keHoachDaoTao
+khoa "1" o-- "0..*" keHoachDaoTao
+nguoiDung "0..1" -- "0..*" keHoachDaoTao
+keHoachDaoTao "1" *-- "0..*" keHoachHocKy
+hocKy "1" o-- "0..*" keHoachHocKy
+keHoachDaoTao "1" *-- "0..*" tuanDaoTao
+keHoachHocKy "0..1" o-- "0..*" tienDoHocPhanLop
+namHoc "0..1" -- "0..*" tienDoHocPhanLop
+hocKy "0..1" -- "0..*" tienDoHocPhanLop
+
+' Ke hoach lop hoc phan - phan cong - lich day
+keHoachHocKy "1" *-- "0..*" keHoachLopHocPhan
+lop "1" o-- "0..*" keHoachLopHocPhan
+hocPhan "1" o-- "0..*" keHoachLopHocPhan
+chuongTrinhHocPhan "0..1" -- "0..*" keHoachLopHocPhan
+keHoachLopHocPhan "1" *-- "0..*" nhomHocPhan
+nhomHocPhan "1" *-- "0..*" phanCongGiangDay
+giangVien "1" o-- "0..*" phanCongGiangDay
+phanCongGiangDay "1" *-- "0..*" lichDayTheoTuan
+tuanDaoTao "1" o-- "0..*" lichDayTheoTuan
+phongHoc "0..1" o-- "0..*" lichDayTheoTuan
+
+' Quy dinh va dinh muc
+namHoc "0..1" o-- "0..*" quyDinhHeSoSiSo
+namHoc "0..1" o-- "0..*" quyDinhTinhGio
+giangVien "1" -- "0..*" dinhMucGiangVien
+namHoc "1" -- "0..*" dinhMucGiangVien
+
+@enduml
