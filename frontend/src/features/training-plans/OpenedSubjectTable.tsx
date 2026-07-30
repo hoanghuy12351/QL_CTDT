@@ -1,4 +1,4 @@
-import { openedSubjectColumns, progressLabels } from "./trainingPlan.columns";
+import { openedSubjectColumns } from "./trainingPlan.columns";
 import type { OpenedSubject } from "./trainingPlan.types";
 
 type OpenedSubjectTableProps = {
@@ -31,7 +31,7 @@ export default function OpenedSubjectTable({ rows }: OpenedSubjectTableProps) {
                   <span className="mt-1 block truncate text-xs text-slate-500">{row.courseCode || "-"}</span>
                 </td>
                 <td className="px-3 py-3 text-slate-700">{row.credits}</td>
-                <td className="px-3 py-3 text-slate-700">{progressLabels[row.progress]}</td>
+                <td className="px-3 py-3 text-slate-700">{row.curriculumSemester ? `HK${row.curriculumSemester}` : "-"}</td>
                 <td className="px-3 py-3">
                   <span className="inline-flex rounded-full bg-sky-50 px-2.5 py-1 text-xs font-semibold text-sky-700 ring-1 ring-sky-100">
                     {row.status}

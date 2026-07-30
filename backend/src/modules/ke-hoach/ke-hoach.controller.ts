@@ -271,6 +271,18 @@ export const keHoachController = {
       result,
     );
   },
+
+  async listGiangVienTheoHocPhan(req: Request, res: Response) {
+    const params = req.validated?.params as { id: number };
+    const result = await keHoachService.listGiangVienTheoHocPhan(params.id);
+
+    return sendSuccess(
+      res,
+      "Lay danh sach giang vien theo hoc phan thanh cong",
+      result,
+    );
+  },
+
   async detailLichTuanPhanCong(req: Request, res: Response) {
     const params = req.validated?.params as { id: number };
     const result = await keHoachService.detailAssignmentWeeklySchedule(

@@ -23,6 +23,7 @@ type TeachingAssignmentFormProps = {
   row: TeachingAssignmentRow;
   lecturers: LecturerOption[];
   initialData?: TeachingAssignment | null;
+  isLecturersLoading?: boolean;
   isSubmitting?: boolean;
   onCancel: () => void;
   onSubmit: (values: TeachingAssignmentFormValues) => void;
@@ -57,6 +58,7 @@ const getDefaultRole = (groupType: string): AssignmentRole => {
 
 export default function TeachingAssignmentForm({
   initialData,
+  isLecturersLoading = false,
   isSubmitting = false,
   lecturers,
   onCancel,
@@ -74,18 +76,35 @@ export default function TeachingAssignmentForm({
     [lecturers],
   );
 
+  const initialLecturerId = useMemo(() => {
+    if (!initialData) return "";
+    if (isLecturersLoading) return String(initialData.lecturerId);
+
+    return lecturers.some((lecturer) => lecturer.id === initialData.lecturerId)
+      ? String(initialData.lecturerId)
+      : "";
+  }, [initialData, isLecturersLoading, lecturers]);
+
   const initialValues = useMemo<TeachingAssignmentFormValues>(
     () => ({
-      lecturerId: initialData ? String(initialData.lecturerId) : "",
+      lecturerId: initialLecturerId,
       role: initialData?.role ?? getDefaultRole(row.group.type),
       assignedPeriods: String(
         initialData?.assignedPeriods ?? row.group.periods ?? 0,
       ),
-      classCoefficient: String(initialData?.classCoefficient ?? 1),
+      classCoefficient: String(
+        initialData?.classCoefficient ?? row.group.classCoefficient ?? 1,
+      ),
       status: initialData?.status ?? "da_phan_cong",
       note: initialData?.note ?? "",
     }),
-    [initialData, row.group.periods, row.group.type],
+    [
+      initialData,
+      initialLecturerId,
+      row.group.classCoefficient,
+      row.group.periods,
+      row.group.type,
+    ],
   );
 
   const [values, setValues] = useState(initialValues);
@@ -146,9 +165,16 @@ export default function TeachingAssignmentForm({
         <SelectInput
           label="Giảng viên *"
           error={errors.lecturerId}
+          placeholder={
+            isLecturersLoading
+              ? "Dang tai giang vien..."
+              : "Chon giang vien"
+          }
           options={lecturerOptions}
           value={values.lecturerId}
-          disabled={isSubmitting}
+          disabled={
+            isSubmitting || isLecturersLoading || lecturerOptions.length === 0
+          }
           onChange={(event) => setField("lecturerId", event.target.value)}
         />
 
@@ -194,6 +220,13 @@ export default function TeachingAssignmentForm({
           }
         />
       </div>
+
+      {!isLecturersLoading && lecturerOptions.length === 0 ? (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          Chua co giang vien nao duoc khai bao day hoc phan nay trong Giang vien
+          hoc phan.
+        </div>
+      ) : null}
 
       <TextareaInput
         label="Ghi chú"

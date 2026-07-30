@@ -102,9 +102,10 @@ export type TeachingAssignmentListResult = {
 
 export type WorkloadStatus =
   | "chua_phan_cong"
-  | "binh_thuong"
-  | "cao"
-  | "qua_tai";
+  | "chua_dinh_muc"
+  | "thieu_gio"
+  | "du_gio"
+  | "thua_gio";
 
 export type LecturerWorkload = {
   lecturerId: number;
@@ -117,6 +118,11 @@ export type LecturerWorkload = {
   internshipGroupCount: number;
   totalGroupCount: number;
   totalPeriods: number;
+  totalStandardHours: number;
+  yearlyQuota: number;
+  semesterQuota: number;
+  excessHours: number;
+  shortageHours: number;
   quota: number;
   status: WorkloadStatus;
   statusLabel: string;
@@ -128,6 +134,7 @@ export type TeachingAssignmentStats = {
   unassignedGroups: number;
   totalAssignments: number;
   totalPeriods: number;
+  totalStandardHours: number;
   lecturerCount: number;
 };
 export type TrainingWeekDto = {

@@ -106,19 +106,14 @@ const buildDetailSheet = (report: SemesterReport) => {
     "Mã lớp",
     "Sĩ số",
     "Hệ số",
+    "Gio TC",
     "Nhóm",
     "Vai trò",
+    "Trang thai hoc",
   ];
-  const weekHeaders = report.weeks.map(formatWeekLabel);
-  const allHeaders = [...baseHeaders, ...weekHeaders];
+  const allHeaders = baseHeaders;
   const columnCount = allHeaders.length;
   const titleMerge = Math.max(columnCount - 1, 0);
-  const totalWeeklyPeriods = report.weeks.map((week) =>
-    report.rows.reduce(
-      (total, item) => total + Number(item.weeklyPeriods[String(week.tuanId)] || 0),
-      0,
-    ),
-  );
 
   return `
     <Worksheet ss:Name="Ke hoach giang day">
@@ -141,13 +136,10 @@ const buildDetailSheet = (report: SemesterReport) => {
               cell(item.maLop, { styleId: "BodyCenter" }),
               cell(item.siSo, { styleId: "BodyCenter" }),
               cell(item.heSoLop, { styleId: "BodyCenter" }),
+              cell(item.soTietQuyDoi, { styleId: "BodyCenter" }),
               cell(item.maNhom, { styleId: "BodyCenter" }),
               cell(item.vaiTro, { styleId: "BodyCenter" }),
-              ...report.weeks.map((week) =>
-                cell(item.weeklyPeriods[String(week.tuanId)] || "", {
-                  styleId: "BodyCenter",
-                }),
-              ),
+              cell(item.trangThaiHocTap, { styleId: "BodyCenter" }),
             ]),
           )
           .join("")}
@@ -160,9 +152,10 @@ const buildDetailSheet = (report: SemesterReport) => {
           cell("", { styleId: "Total" }),
           cell("", { styleId: "Total" }),
           cell("", { styleId: "Total" }),
+          cell(report.summary.totalConvertedPeriods, { styleId: "Total" }),
           cell("", { styleId: "Total" }),
           cell("", { styleId: "Total" }),
-          ...totalWeeklyPeriods.map((value) => cell(value || "", { styleId: "Total" })),
+          cell("", { styleId: "Total" }),
         ])}
       </Table>
       <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">

@@ -4,14 +4,15 @@ import type {
 } from "./teachingAssignment.types";
 
 export const teachingAssignmentColumns = [
-  "Nhóm học phần",
-  "Lớp",
-  "Học phần",
-  "Giảng viên",
-  "Vai trò",
-  "Số tiết",
-  "Trạng thái",
-  "Thao tác",
+  "Nhom hoc phan",
+  "Lop",
+  "Hoc phan",
+  "Giang vien",
+  "Vai tro",
+  "So tiet",
+  "Gio TC",
+  "Trang thai",
+  "Thao tac",
 ];
 
 export const workloadColumns = [
@@ -23,7 +24,10 @@ export const workloadColumns = [
   "Thực tập",
   "Tổng nhóm",
   "Tổng tiết",
-  "Định mức",
+  "Giờ quy đổi HK",
+  "Phải dạy HK",
+  "Thừa HK",
+  "Thiếu HK",
   "Trạng thái",
 ];
 
@@ -36,7 +40,8 @@ export const assignmentStatusClassNames: Record<AssignmentStatus, string> = {
 
 export const workloadStatusClassNames: Record<WorkloadStatus, string> = {
   chua_phan_cong: "bg-slate-100 text-slate-700 ring-slate-200",
-  binh_thuong: "bg-emerald-50 text-emerald-700 ring-emerald-100",
-  cao: "bg-amber-50 text-amber-700 ring-amber-100",
-  qua_tai: "bg-red-50 text-red-700 ring-red-100",
+  chua_dinh_muc: "bg-violet-50 text-violet-700 ring-violet-100",
+  thieu_gio: "bg-amber-50 text-amber-700 ring-amber-100",
+  du_gio: "bg-emerald-50 text-emerald-700 ring-emerald-100",
+  thua_gio: "bg-red-50 text-red-700 ring-red-100",
 };

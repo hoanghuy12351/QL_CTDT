@@ -31,6 +31,7 @@ export type SemesterReportRow = {
   heSoLop: number;
   soTietQuyDoi: number;
   trangThai: string;
+  trangThaiHocTap: string;
   phongHoc: string;
   ghiChu: string;
   weeklyPeriods: Record<string, number>;

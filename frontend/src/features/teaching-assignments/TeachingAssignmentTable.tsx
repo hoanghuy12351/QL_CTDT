@@ -1,4 +1,4 @@
-import { CalendarDays, Edit3, Plus, Trash2 } from "lucide-react";
+import { Edit3, Plus, Trash2 } from "lucide-react";
 import IconButton from "../../components/ui/IconButton";
 import TableSkeleton from "../../components/ui/TableSkeleton";
 import { groupTypeClassNames } from "../teaching-groups/teachingGroup.columns";
@@ -18,7 +18,7 @@ type TeachingAssignmentTableProps = {
   onAssign: (row: TeachingAssignmentRow) => void;
   onEdit: (row: TeachingAssignmentRow) => void;
   onDelete: (assignment: TeachingAssignment) => void;
-  onSchedule: (assignment: TeachingAssignment) => void;
+  onSchedule?: (assignment: TeachingAssignment) => void;
 };
 export default function TeachingAssignmentTable({
   deletingId,
@@ -26,7 +26,6 @@ export default function TeachingAssignmentTable({
   onAssign,
   onDelete,
   onEdit,
-  onSchedule,
   rows,
 }: TeachingAssignmentTableProps) {
   return (
@@ -123,6 +122,12 @@ export default function TeachingAssignmentTable({
                   </td>
 
                   <td className="px-3 py-3">
+                    <span className="font-semibold text-slate-950">
+                      {assignment?.convertedPeriods ?? "-"}
+                    </span>
+                  </td>
+
+                  <td className="px-3 py-3">
                     {assignment ? (
                       <span
                         className={[
@@ -155,12 +160,6 @@ export default function TeachingAssignmentTable({
                             onClick={() => onAssign(row)}
                           >
                             <Plus size={16} aria-hidden="true" />
-                          </IconButton>
-                          <IconButton
-                            label="Phân bổ tuần"
-                            onClick={() => onSchedule(assignment)}
-                          >
-                            <CalendarDays size={16} aria-hidden="true" />
                           </IconButton>
                           <IconButton
                             label="Sửa phân công"

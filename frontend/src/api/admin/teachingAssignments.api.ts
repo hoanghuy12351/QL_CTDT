@@ -66,6 +66,14 @@ export const teachingAssignmentsApi = {
     return unwrap(data).items.map(mapLecturer);
   },
 
+  listLecturersByCourse: async (courseId: number) => {
+    const { data } = await axiosClient.get<ApiResponse<LecturerDto[]>>(
+      `/admin/ke-hoach/hoc-phan/${courseId}/giang-vien`,
+    );
+
+    return unwrap(data).map(mapLecturer);
+  },
+
   listAssignments: async (params: {
     page?: number;
     limit?: number;

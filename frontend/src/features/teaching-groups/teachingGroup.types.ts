@@ -25,6 +25,7 @@ export type OpenedClassCourseDto = {
     soTietLyThuyet?: number;
     soTietThucHanh?: number;
     tongSoTiet?: number;
+    heSoSiSo?: number | string | null;
   } | null;
   nhomHocPhan?: unknown[];
 };
@@ -57,6 +58,7 @@ export type OpenedClassCourse = {
   theoryPeriods: number;
   practicePeriods: number;
   totalPeriods: number;
+  classCoefficient: number;
   classSize: number;
   groupCount: number;
 };
@@ -76,6 +78,7 @@ export type TeachingGroup = {
   courseName: string;
   classSize: number;
   periods: number;
+  classCoefficient: number;
   note: string;
   assignmentCount: number;
 };

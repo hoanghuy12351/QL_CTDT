@@ -10,6 +10,11 @@ type TeachingWorkloadMatrixProps = {
   isLoading?: boolean;
 };
 
+const formatHour = (value: number) => {
+  if (!Number.isFinite(value)) return "-";
+  return Number.isInteger(value) ? String(value) : value.toFixed(1);
+};
+
 export default function TeachingWorkloadMatrix({
   isLoading = false,
   rows,
@@ -21,7 +26,7 @@ export default function TeachingWorkloadMatrix({
       ) : null}
 
       <div className={["overflow-auto", isLoading ? "hidden" : ""].join(" ")}>
-        <table className="w-full min-w-[1080px] table-fixed text-left text-sm">
+        <table className="w-full min-w-[1240px] table-fixed text-left text-sm">
           <thead className="bg-slate-50 text-xs uppercase text-slate-600">
             <tr>
               {workloadColumns.map((column) => (
@@ -66,9 +71,20 @@ export default function TeachingWorkloadMatrix({
                   {row.totalGroupCount}
                 </td>
                 <td className="px-3 py-3 font-semibold text-slate-950">
-                  {row.totalPeriods}
+                  {formatHour(row.totalPeriods)}
                 </td>
-                <td className="px-3 py-3 text-slate-700">{row.quota || "-"}</td>
+                <td className="px-3 py-3 font-semibold text-brand-700">
+                  {formatHour(row.totalStandardHours)}
+                </td>
+                <td className="px-3 py-3 font-semibold text-slate-950">
+                  {row.semesterQuota > 0 ? formatHour(row.semesterQuota) : "-"}
+                </td>
+                <td className="px-3 py-3 font-semibold text-red-700">
+                  {row.excessHours > 0 ? formatHour(row.excessHours) : "-"}
+                </td>
+                <td className="px-3 py-3 font-semibold text-amber-700">
+                  {row.shortageHours > 0 ? formatHour(row.shortageHours) : "-"}
+                </td>
 
                 <td className="px-3 py-3">
                   <span

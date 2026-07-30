@@ -196,6 +196,12 @@ router.post(
 );
 
 router.get(
+  "/hoc-phan/:id/giang-vien",
+  validate({ params: idParamSchema }),
+  asyncHandler(keHoachController.listGiangVienTheoHocPhan),
+);
+
+router.get(
   "/phan-cong-giang-day",
   validate({ query: assignmentListQuerySchema }),
   asyncHandler(keHoachController.listPhanCongGiangDay),

@@ -1,7 +1,7 @@
 import type { PaginationMeta } from "../../types/api.types";
 
 export type TrainingPlanStatus = "du_thao" | "da_duyet" | "dang_thuc_hien" | "da_dong";
-export type SemesterPlanStatus = "du_thao" | "dang_thuc_hien" | "da_dong";
+export type SemesterPlanStatus = "du_thao" | "da_duyet" | "dang_thuc_hien" | "da_dong";
 export type PlanProgress = "tien_do_1" | "tien_do_2" | "ca_ky";
 
 export type RelationDto = {
@@ -22,6 +22,7 @@ export type RelationDto = {
   tenHocPhan?: string;
   soTinChi?: number;
   soTietThucHanh?: number;
+  hocKyDuKien?: number | null;
 };
 
 export type TrainingPlanDto = {
@@ -83,6 +84,7 @@ export type OpenedSubjectDto = {
   lop?: RelationDto | null;
   hocPhan?: RelationDto | null;
   nhomHocPhan?: unknown[];
+  chuongTrinhHocPhan?: { hocKyDuKien?: number | null } | null;
 };
 
 export type TrainingPlan = {
@@ -127,7 +129,7 @@ export type SuggestionCell = {
   courseId: number;
   curriculumCourseId: number;
   semester: number;
-  progress: PlanProgress;
+  progress?: PlanProgress | null;
 };
 
 export type SuggestionMatrix = {
@@ -145,9 +147,10 @@ export type OpenedSubject = {
   courseCode: string;
   courseName: string;
   credits: number;
-  progress: PlanProgress;
+  progress?: PlanProgress | null;
   status: string;
   groupCount: number;
+  curriculumSemester?: number | null;
 };
 
 export type TrainingPlanFormValues = {

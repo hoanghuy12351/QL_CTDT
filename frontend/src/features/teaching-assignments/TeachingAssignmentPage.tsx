@@ -40,7 +40,6 @@ import type {
   AssignmentStatusFilter,
   AssignmentViewMode,
   ClassroomOption,
-  LecturerOption,
   TeachingAssignment,
   TeachingAssignmentFormValues,
   TeachingAssignmentRow,
@@ -247,9 +246,22 @@ export default function TeachingAssignmentPage() {
     enabled: scheduleDisclosure.isOpen && Boolean(schedulingAssignment?.id),
   });
 
+  const courseLecturersQuery = useQuery({
+    queryKey: [
+      "teaching-assignment-course-lecturers",
+      selectedRow?.group.courseId,
+    ],
+    queryFn: () =>
+      teachingAssignmentsApi.listLecturersByCourse(
+        Number(selectedRow?.group.courseId ?? 0),
+      ),
+    enabled: formDisclosure.isOpen && Boolean(selectedRow?.group.courseId),
+  });
+
   const groups = groupsQuery.data?.items ?? [];
   const assignments = assignmentsQuery.data?.items ?? [];
   const lecturers = lecturersQuery.data ?? [];
+  const assignmentFormLecturers = courseLecturersQuery.data ?? [];
 
   const classOptions = useMemo<SelectOption[]>(() => {
     const map = new Map<number, SelectOption>();
@@ -744,8 +756,9 @@ export default function TeachingAssignmentPage() {
         >
           <TeachingAssignmentForm
             row={selectedRow}
-            lecturers={lecturers as LecturerOption[]}
+            lecturers={assignmentFormLecturers}
             initialData={editingAssignment}
+            isLecturersLoading={courseLecturersQuery.isLoading}
             isSubmitting={
               createAssignmentMutation.isPending ||
               updateAssignmentMutation.isPending

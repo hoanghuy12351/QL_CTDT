@@ -125,6 +125,83 @@ const extractSemesterNumber = (...values: Array<string | null | undefined>) => {
   return undefined;
 };
 
+
+const getSemesterOrderInYear = (hocKy: unknown) => {
+  const semester = hocKy as { thuTuTrongNam?: number | null; maHocKy?: string | null; tenHocKy?: string | null } | null;
+  const orderFromCode = extractSemesterNumber(semester?.maHocKy, semester?.tenHocKy);
+  if (orderFromCode) return orderFromCode;
+
+  if (semester?.thuTuTrongNam && semester.thuTuTrongNam > 0) {
+    return semester.thuTuTrongNam;
+  }
+
+  return undefined;
+};
+
+const getSchoolYearStartYear = (namHoc: unknown) => {
+  const schoolYear = namHoc as { maNamHoc?: string | null; ngayBatDau?: Date | null } | null;
+  const matched = schoolYear?.maNamHoc?.match(/\d{4}/);
+  if (matched) return Number(matched[0]);
+
+  if (schoolYear?.ngayBatDau instanceof Date) {
+    return schoolYear.ngayBatDau.getFullYear();
+  }
+
+  return undefined;
+};
+
+const resolveClassSemesterMap = async (input: {
+  lopIds: number[];
+  keHoachHocKy: unknown;
+  overrideHocKyDuKien?: number;
+}) => {
+  if (input.overrideHocKyDuKien) {
+    return new Map(input.lopIds.map((lopId) => [lopId, input.overrideHocKyDuKien]));
+  }
+
+  const semesterPlan = input.keHoachHocKy as {
+    hocKy?: unknown;
+    keHoachDaoTao?: { namHoc?: unknown } | null;
+  };
+  const semesterOrder = getSemesterOrderInYear(semesterPlan.hocKy);
+  const schoolYearStart = getSchoolYearStartYear(semesterPlan.keHoachDaoTao?.namHoc);
+
+  if (!semesterOrder || !schoolYearStart) {
+    throw new AppError(
+      "Khong xac dinh duoc nam hoc hoac hoc ky trong nam cua ke hoach hoc ky",
+      HTTP_STATUS.BAD_REQUEST,
+    );
+  }
+
+  const classes = await keHoachRepository.findClassesForSuggestion(input.lopIds);
+  const classMap = new Map(classes.map((lop) => [lop.lopId, lop]));
+  const result = new Map<number, number>();
+
+  for (const lopId of input.lopIds) {
+    const lop = classMap.get(lopId);
+    const cohortStart = lop?.khoaHoc?.namBatDau;
+
+    if (!cohortStart) {
+      throw new AppError(
+        "Lop chua co khoa hoc hoac nam bat dau khoa hoc",
+        HTTP_STATUS.BAD_REQUEST,
+      );
+    }
+
+    const hocKyTrongCTDT = (schoolYearStart - cohortStart) * 2 + semesterOrder;
+    if (hocKyTrongCTDT < 1) {
+      throw new AppError(
+        "Khong xac dinh duoc hoc ky CTDT phu hop voi lop da chon",
+        HTTP_STATUS.BAD_REQUEST,
+      );
+    }
+
+    result.set(lopId, hocKyTrongCTDT);
+  }
+
+  return result;
+};
+
 const getUpcomingSunday = (value: Date) => {
   const dayOfWeek = value.getDay();
   const daysUntilSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
@@ -186,59 +263,42 @@ const buildTrainingWeeksFromSchoolYear = (schoolYear: {
 };
 
 type SemesterPlanWeekContext = {
-  hocKy: {
+  hocKy?: {
     maHocKy?: string | null;
     tenHocKy?: string | null;
-    ngayBatDau: Date | null;
-    ngayKetThuc: Date | null;
-  };
-  keHoachDaoTao: {
-    namHoc: {
-      maNamHoc: string;
-      ngayBatDau: Date | null;
-      ngayKetThuc: Date | null;
-    };
-    tuanDaoTao: Array<{
+    thuTuTrongNam?: number | null;
+  } | null;
+  keHoachDaoTao?: {
+    namHoc?: {
+      maNamHoc?: string | null;
+      ngayBatDau?: Date | null;
+      ngayKetThuc?: Date | null;
+    } | null;
+    tuanDaoTao?: Array<{
       tuanId: number;
       soTuan: number;
       tenTuan: string | null;
       ngayBatDau: Date | null;
       ngayKetThuc: Date | null;
       loaiTuan: string | null;
-    }>;
-  };
+    }> | null;
+  } | null;
 };
 
 const getSemesterTrainingWeeksFromPlan = (
-  semesterPlan: SemesterPlanWeekContext,
+  _semesterPlan: SemesterPlanWeekContext,
 ) => {
-  const trainingPlan = semesterPlan.keHoachDaoTao;
-  const schoolYear = trainingPlan.namHoc;
-  const semester = semesterPlan.hocKy;
-  const semesterRange = resolveSemesterRangeInSchoolYear({
-    semester,
-    schoolYear,
-  });
-
-  if (!semesterRange) {
-    return [];
-  }
-
-  const { rangeStart, rangeEnd } = semesterRange;
-
-  return trainingPlan.tuanDaoTao.filter((week) => {
-    if (week.loaiTuan !== "hoc" || !week.ngayBatDau || !week.ngayKetThuc) {
-      return false;
-    }
-
-    const weekStart = toStartOfDay(week.ngayBatDau);
-    const weekEnd = toStartOfDay(week.ngayKetThuc);
-
-    return (
-      weekStart.getTime() <= rangeEnd.getTime() &&
-      weekEnd.getTime() >= rangeStart.getTime()
-    );
-  });
+  // Nghiệp vụ mới đã bỏ phân bổ tuần/kế hoạch giảng theo tuần.
+  // Báo cáo học kỳ không cần weeklyPeriods nữa, nên trả mảng rỗng
+  // để tránh phụ thuộc ngayBatDau/ngayKetThuc của học kỳ.
+  return [] as Array<{
+    tuanId: number;
+    soTuan: number;
+    tenTuan: string | null;
+    ngayBatDau: Date | null;
+    ngayKetThuc: Date | null;
+    loaiTuan: string | null;
+  }>;
 };
 
 const getSemesterTrainingWeeks = (
@@ -255,6 +315,19 @@ const getSemesterTrainingWeeks = (
 
 const toNumber = (value: unknown) => Number(value ?? 0);
 
+const getCourseSizeCoefficient = (hocPhan: { heSoSiSo?: unknown }) => {
+  const coefficient = toNumber(hocPhan.heSoSiSo);
+  return coefficient > 0 ? coefficient : 1;
+};
+
+const getLecturerConvertedWorkload = (giangVien?: {
+  phanCongGiangDay?: Array<{ soTietQuyDoi?: unknown }>;
+}) =>
+  giangVien?.phanCongGiangDay?.reduce(
+    (total, assignment) => total + toNumber(assignment.soTietQuyDoi),
+    0,
+  ) ?? 0;
+
 const reportRoleLabels: Record<string, string> = {
   chinh: "Chính",
   tro_giang: "Trợ giảng",
@@ -269,6 +342,35 @@ const reportGroupTypeLabels: Record<string, string> = {
   do_an: "Đồ án",
   thuc_tap: "Thực tập",
   tot_nghiep: "Tốt nghiệp",
+};
+
+const learningStatusLabels: Record<string, string> = {
+  chua_hoc: "Chua hoc",
+  da_len_ke_hoach: "Da len ke hoach",
+  dang_hoc: "Dang hoc",
+  da_hoc: "Da hoc",
+  tam_hoan: "Tam hoan",
+  da_huy: "Da huy",
+};
+
+const getLearningStatus = (openedSubject: {
+  lopId: number;
+  chuongTrinhHocPhan?: {
+    tienDoHocPhanLop?: Array<{
+      lopId: number;
+      trangThai?: string | null;
+    }>;
+  } | null;
+  trangThai?: string | null;
+}) => {
+  const status =
+    openedSubject.chuongTrinhHocPhan?.tienDoHocPhanLop?.find(
+      (item) => item.lopId === openedSubject.lopId,
+    )?.trangThai ??
+    openedSubject.trangThai ??
+    "chua_hoc";
+
+  return learningStatusLabels[status] ?? status;
 };
 
 type SemesterReportData = NonNullable<
@@ -346,6 +448,7 @@ const buildSemesterReport = (data: SemesterReportData): SemesterReport => {
         heSoLop: 1,
         soTietQuyDoi: 0,
         trangThai: openedSubject.trangThai ?? "du_thao",
+        trangThaiHocTap: getLearningStatus(openedSubject),
         phongHoc: "",
         ghiChu: openedSubject.ghiChu ?? "",
         weeklyPeriods: {},
@@ -381,6 +484,7 @@ const buildSemesterReport = (data: SemesterReportData): SemesterReport => {
           heSoLop: 1,
           soTietQuyDoi: 0,
           trangThai: "chua_phan_cong",
+          trangThaiHocTap: getLearningStatus(openedSubject),
           phongHoc: "",
           ghiChu: group.ghiChu ?? "",
           weeklyPeriods: {},
@@ -418,6 +522,7 @@ const buildSemesterReport = (data: SemesterReportData): SemesterReport => {
           heSoLop: toNumber(assignment.heSoLop) || 1,
           soTietQuyDoi: toNumber(assignment.soTietQuyDoi),
           trangThai: assignment.trangThai ?? "du_thao",
+          trangThaiHocTap: getLearningStatus(openedSubject),
           phongHoc: buildRoomNames(assignment.lichDayTheoTuan),
           ghiChu: assignment.ghiChu ?? "",
           weeklyPeriods: buildWeeklyPeriods(assignment.lichDayTheoTuan),
@@ -505,22 +610,23 @@ const assertTrainingPlanEditable = (trainingPlan: {
   }
 };
 
-type SemesterPlanStatus = "du_thao" | "dang_thuc_hien" | "da_dong";
+type SemesterPlanStatus = "du_thao" | "da_duyet" | "dang_thuc_hien" | "da_dong";
 
-const semesterStatusLabels: Record<SemesterPlanStatus, string> = {
+const semesterStatusLabels: Record<string, string> = {
   du_thao: "du thao",
-  dang_thuc_hien: "da duyet/dang thuc hien",
+  da_duyet: "da duyet",
+  dang_thuc_hien: "dang thuc hien",
   da_dong: "da dong",
 };
 
 const assertSemesterPlanEditable = (semesterPlan: {
-  trangThai?: SemesterPlanStatus | null;
+  trangThai?: string | null;
 }) => {
   const status = semesterPlan.trangThai ?? "du_thao";
 
   if (status !== "du_thao") {
     throw new AppError(
-      `Ke hoach hoc ky dang o trang thai ${semesterStatusLabels[status]}, khong the chinh sua. Vui long mo lai chinh sua truoc khi thay doi du lieu.`,
+      `Ke hoach hoc ky dang o trang thai ${semesterStatusLabels[status] ?? status}, khong the chinh sua. Vui long mo lai chinh sua truoc khi thay doi du lieu.`,
       HTTP_STATUS.CONFLICT,
     );
   }
@@ -557,12 +663,6 @@ const buildApprovalBlockers = (
   if (summary.groupWithoutAssignmentCount > 0) {
     blockers.push(
       `${summary.groupWithoutAssignmentCount} nhom chua phan cong giang vien`,
-    );
-  }
-
-  if (summary.assignmentWithoutWeeklyScheduleCount > 0) {
-    blockers.push(
-      `${summary.assignmentWithoutWeeklyScheduleCount} phan cong chua phan bo lich theo tuan`,
     );
   }
 
@@ -680,6 +780,17 @@ export const keHoachService = {
     return this.deleteAssignment(id);
   },
 
+  async listGiangVienTheoHocPhan(hocPhanId: number) {
+    const assignments =
+      await keHoachRepository.listTeachersCanTeachCourse(hocPhanId);
+
+    return mapKeHoachData(
+      assignments
+        .map((assignment) => assignment.giangVien)
+        .filter((giangVien) => Boolean(giangVien)),
+    );
+  },
+
   /**
    * Kế hoạch đào tạo năm.
    */
@@ -712,16 +823,6 @@ export const keHoachService = {
   },
 
   async createTrainingPlan(input: CreateKeHoachDaoTaoInput, userId?: number) {
-    const schoolYear = await keHoachRepository.findSchoolYearForWeekGeneration(
-      input.namHocId,
-    );
-
-    if (!schoolYear) {
-      throw new AppError("Khong tim thay nam hoc", HTTP_STATUS.NOT_FOUND);
-    }
-
-    const generatedWeeks = buildTrainingWeeksFromSchoolYear(schoolYear);
-
     if (input.trangThai && input.trangThai !== "du_thao") {
       throw new AppError(
         "Ke hoach nam hoc moi phai bat dau o trang thai du thao",
@@ -730,11 +831,34 @@ export const keHoachService = {
     }
 
     try {
+      const [schoolYear, semesters] = await Promise.all([
+        keHoachRepository.findSchoolYearForWeekGeneration(input.namHocId),
+        keHoachRepository.listActiveSemesters(),
+      ]);
+      const defaultSemesterPlans = semesters
+        .map((semester) => ({
+          semester,
+          order: getSemesterOrderInYear(semester),
+        }))
+        .filter(
+          (item): item is { semester: (typeof semesters)[number]; order: number } =>
+            typeof item.order === "number" && item.order >= 1 && item.order <= 2,
+        )
+        .sort((left, right) => left.order - right.order)
+        .slice(0, 2)
+        .map(({ semester }) => ({
+          hocKyId: semester.hocKyId,
+          tenKeHoachHocKy: `Ke hoach ${semester.tenHocKy} nam hoc ${
+            schoolYear?.maNamHoc ?? ""
+          }`.trim(),
+          trangThai: "du_thao" as const,
+        }));
+
       const result = await keHoachRepository.createTrainingPlan({
         ...input,
         trangThai: "du_thao",
         nguoiTaoId: userId,
-        tuanDaoTao: generatedWeeks,
+        keHoachHocKy: defaultSemesterPlans,
       });
 
       return mapKeHoachData(result);
@@ -765,53 +889,8 @@ export const keHoachService = {
       );
     }
 
-    const shouldResyncWeeks =
-      input.namHocId !== undefined && input.namHocId !== existingPlan.namHocId;
-
-    let generatedWeeks:
-      | Array<{
-          soTuan: number;
-          tenTuan: string;
-          ngayBatDau: Date;
-          ngayKetThuc: Date;
-          loaiTuan: "hoc";
-        }>
-      | undefined;
-
-    if (shouldResyncWeeks) {
-      const weeklyScheduleCount =
-        await keHoachRepository.countWeeklyScheduleUsingTrainingPlanWeeks(id);
-
-      if (weeklyScheduleCount > 0) {
-        throw new AppError(
-          "Ke hoach da co lich day theo tuan, khong the doi nam hoc de sinh lai tuan",
-          HTTP_STATUS.CONFLICT,
-        );
-      }
-
-      const schoolYear =
-        await keHoachRepository.findSchoolYearForWeekGeneration(
-          input.namHocId!,
-        );
-
-      if (!schoolYear) {
-        throw new AppError("Khong tim thay nam hoc", HTTP_STATUS.NOT_FOUND);
-      }
-
-      generatedWeeks = buildTrainingWeeksFromSchoolYear(schoolYear);
-    }
-
     try {
       const result = await keHoachRepository.updateTrainingPlan(id, input);
-
-      if (shouldResyncWeeks && generatedWeeks) {
-        const syncedPlan = await keHoachRepository.replaceTrainingPlanWeeks(
-          id,
-          generatedWeeks,
-        );
-
-        return mapKeHoachData(syncedPlan);
-      }
 
       return mapKeHoachData(result);
     } catch (error) {
@@ -1420,23 +1499,21 @@ export const keHoachService = {
       );
     }
 
-    const hocKyDuKien =
-      input.hocKyDuKien ??
-      extractSemesterNumber(
-        keHoachHocKy.hocKy?.maHocKy,
-        keHoachHocKy.hocKy?.tenHocKy,
-      );
+    const classSemesterMap = await resolveClassSemesterMap({
+      lopIds: input.lopIds,
+      keHoachHocKy,
+      overrideHocKyDuKien: input.hocKyDuKien,
+    });
 
-    if (!hocKyDuKien) {
-      throw new AppError(
-        "Khong xac dinh duoc hoc ky du kien tu ke hoach hoc ky",
-        HTTP_STATUS.BAD_REQUEST,
+    const classSemesters = Array.from(classSemesterMap.entries())
+      .map(([lopId, hocKyDuKien]) => ({ lopId, hocKyDuKien }))
+      .filter(
+        (item): item is { lopId: number; hocKyDuKien: number } =>
+          typeof item.hocKyDuKien === "number",
       );
-    }
 
     const suggested = await keHoachRepository.findSuggestedSubjects({
-      lopIds: input.lopIds,
-      hocKyDuKien,
+      classSemesters,
     });
 
     const opened = await keHoachRepository.listOpenedSubjects(
@@ -1506,17 +1583,10 @@ export const keHoachService = {
 
     assertSemesterPlanEditable(keHoachHocKy);
 
-    const hocKyDuKien = extractSemesterNumber(
-      keHoachHocKy.hocKy?.maHocKy,
-      keHoachHocKy.hocKy?.tenHocKy,
-    );
-
-    if (!hocKyDuKien) {
-      throw new AppError(
-        "Khong xac dinh duoc hoc ky du kien tu ke hoach hoc ky",
-        HTTP_STATUS.BAD_REQUEST,
-      );
-    }
+    const classSemesterMap = await resolveClassSemesterMap({
+      lopIds: Array.from(new Set(input.items.map((item) => item.lopId))),
+      keHoachHocKy,
+    });
 
     const progressItems = await keHoachRepository.findProgressForOpenSubjects(
       input.items,
@@ -1535,14 +1605,14 @@ export const keHoachService = {
 
     if (invalidItem) {
       throw new AppError(
-        "Chi duoc mo hoc phan thuoc CTDT cua lop va dang o trang thai chua hoc",
+        "Chi duoc mo hoc phan thuoc CTDT cua lop va chua duoc gan vao ke hoach dao tao",
         HTTP_STATUS.BAD_REQUEST,
       );
     }
 
     const invalidSemesterItem = input.items.find((item) => {
       const progress = progressMap.get(`${item.lopId}-${item.hocPhanId}`);
-      return progress?.hocKyDuKien !== hocKyDuKien;
+      return progress?.hocKyDuKien !== classSemesterMap.get(item.lopId);
     });
 
     if (invalidSemesterItem) {
@@ -1561,7 +1631,6 @@ export const keHoachService = {
           ...item,
           chuongTrinhHocPhanId:
             item.chuongTrinhHocPhanId ?? progress.chuongTrinhHocPhanId,
-          tienDo: item.tienDo ?? progress.tienDoDuKien ?? "ca_ky",
           siSo: item.siSo || progress.lop.siSo || 0,
           coThucHanh:
             item.coThucHanh ||
@@ -1692,7 +1761,11 @@ export const keHoachService = {
         ? input.soTietPhanCong
         : Number(group.soTiet ?? 0);
 
-    const soTietQuyDoi = soTietPhanCong * input.heSoLop;
+    const heSoLop =
+      input.heSoLop !== undefined
+        ? input.heSoLop
+        : getCourseSizeCoefficient(group.keHoachLopHocPhan.hocPhan);
+    const soTietQuyDoi = soTietPhanCong * heSoLop;
 
     try {
       const result = await keHoachRepository.createAssignment({
@@ -1700,11 +1773,20 @@ export const keHoachService = {
         giangVienId: input.giangVienId,
         vaiTro: input.vaiTro,
         soTietPhanCong,
-        heSoLop: input.heSoLop,
+        heSoLop,
         soTietQuyDoi,
         trangThai: input.trangThai,
         ghiChu: input.ghiChu,
       });
+
+      const nextWorkload = getLecturerConvertedWorkload(result.giangVien);
+      const quota = toNumber(result.giangVien.dinhMucGio);
+
+      if (quota > 0 && nextWorkload > quota) {
+        warnings.push(
+          `Tong gio TC cua giang vien (${nextWorkload}) vuot dinh muc (${quota})`,
+        );
+      }
 
       return mapKeHoachData({
         assignment: result,
@@ -1787,6 +1869,15 @@ export const keHoachService = {
         ghiChu: input.ghiChu,
       });
 
+      const nextWorkload = getLecturerConvertedWorkload(result.giangVien);
+      const quota = toNumber(result.giangVien.dinhMucGio);
+
+      if (quota > 0 && nextWorkload > quota) {
+        warnings.push(
+          `Tong gio TC cua giang vien (${nextWorkload}) vuot dinh muc (${quota})`,
+        );
+      }
+
       return mapKeHoachData({
         assignment: result,
         warnings,
@@ -1864,7 +1955,7 @@ export const keHoachService = {
     const tongTiet = lichCanLuu.reduce((total, item) => total + item.soTiet, 0);
     const soTietPhanCong = Number(assignment.soTietPhanCong);
 
-    if (tongTiet !== soTietPhanCong) {
+    if (Math.abs(tongTiet - soTietPhanCong) > 0.001) {
       throw new AppError(
         `Tong so tiet theo tuan (${tongTiet}) phai bang so tiet phan cong (${soTietPhanCong})`,
         HTTP_STATUS.BAD_REQUEST,

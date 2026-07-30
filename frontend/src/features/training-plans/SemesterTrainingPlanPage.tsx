@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useSearchParams } from "react-router-dom";
 import {
+  BookOpenCheck,
   CalendarRange,
   CheckCircle2,
   Lightbulb,
@@ -51,9 +52,9 @@ type SemesterPlanAction = "approve" | "reopen" | "close";
 
 const statusDescriptions: Record<SemesterPlanStatus, string> = {
   du_thao:
-    "Có thể mở học phần, tạo nhóm, phân công giảng viên và phân bổ tuần.",
-  dang_thuc_hien:
-    "Kế hoạch đã được duyệt và đang khóa chỉnh sửa để dùng làm dữ liệu chính thức.",
+    "Kế hoạch đang được xây dựng, có thể mở học phần, tạo nhóm LT/TH và phân công giảng viên.",
+  da_duyet: "Kế hoạch đã được duyệt, sẵn sàng triển khai.",
+  dang_thuc_hien: "Kế hoạch đang được triển khai trong học kỳ.",
   da_dong: "Kế hoạch đã kết thúc học kỳ và được lưu như dữ liệu lịch sử.",
 };
 
@@ -87,6 +88,7 @@ export default function SemesterTrainingPlanPage() {
 
   const queryClient = useQueryClient();
   const semesterFormDisclosure = useDisclosure();
+  const planningDisclosure = useDisclosure();
   const workflowDisclosure = useDisclosure();
   const { limit, page, resetPage, setLimit, setPage } = usePagination({
     initialLimit: 10,
@@ -138,6 +140,13 @@ export default function SemesterTrainingPlanPage() {
       }),
   });
 
+  const selectedSemesterPlanDetailQuery = useQuery({
+    queryKey: ["semester-plan-detail", selectedSemesterPlanId],
+    queryFn: () =>
+      trainingPlansApi.detailSemesterPlan(Number(selectedSemesterPlanId)),
+    enabled: Boolean(selectedSemesterPlanId),
+  });
+
   const semestersQuery = useQuery({
     queryKey: ["admin-crud-options", "hoc-ky"],
     queryFn: () => adminCrudApi.list("hoc-ky", { page: 1, limit: 500 }),
@@ -184,16 +193,32 @@ export default function SemesterTrainingPlanPage() {
   const selectedYearPlan = (plansQuery.data?.items ?? []).find(
     (plan) => String(plan.id) === selectedPlanId,
   );
-  const selectedSemesterPlan = semesterRows.find(
+  const selectedSemesterPlanFromRows = semesterRows.find(
     (plan) => String(plan.id) === selectedSemesterPlanId,
   );
+  const selectedSemesterPlan =
+    selectedSemesterPlanFromRows ?? selectedSemesterPlanDetailQuery.data;
   const isSelectedPlanLocked = selectedSemesterPlan
     ? selectedSemesterPlan.status !== "du_thao"
     : false;
 
   useEffect(() => {
-    if (routeSemesterPlanId > 0 && !selectedSemesterPlanId) {
+    if (!selectedSemesterPlanDetailQuery.data) return;
+
+    const trainingPlanId = String(selectedSemesterPlanDetailQuery.data.trainingPlanId);
+    if (selectedPlanId !== trainingPlanId) {
+      setSelectedPlanId(trainingPlanId);
+    }
+  }, [selectedPlanId, selectedSemesterPlanDetailQuery.data]);
+
+  useEffect(() => {
+    if (
+      routeSemesterPlanId > 0 &&
+      selectedSemesterPlanId !== String(routeSemesterPlanId)
+    ) {
       setSelectedSemesterPlanId(String(routeSemesterPlanId));
+      setSuggestionMatrix(null);
+      setSelectedMatrixKeys([]);
     }
   }, [routeSemesterPlanId, selectedSemesterPlanId]);
 
@@ -210,6 +235,9 @@ export default function SemesterTrainingPlanPage() {
       queryClient.invalidateQueries({ queryKey: ["training-plans"] }),
       queryClient.invalidateQueries({
         queryKey: ["opened-subjects", selectedSemesterPlanId],
+      }),
+      queryClient.invalidateQueries({
+        queryKey: ["semester-plan-detail", selectedSemesterPlanId],
       }),
       queryClient.invalidateQueries({ queryKey: ["reports"] }),
     ]);
@@ -298,7 +326,6 @@ export default function SemesterTrainingPlanPage() {
             lopId: cell.classId,
             hocPhanId: cell.courseId,
             chuongTrinhHocPhanId: cell.curriculumCourseId,
-            tienDo: cell.progress,
           })),
       });
     },
@@ -309,6 +336,7 @@ export default function SemesterTrainingPlanPage() {
       );
       setSuggestionMatrix(null);
       setSelectedMatrixKeys([]);
+      planningDisclosure.close();
       await invalidateSemesterData();
     },
     onError: (error) =>
@@ -441,135 +469,67 @@ export default function SemesterTrainingPlanPage() {
         onLimitChange={setLimit}
       />
 
-      {selectedYearPlan ? (
+      {selectedSemesterPlanId ? (
         <section className="space-y-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
           <div>
             <h2 className="text-lg font-bold text-slate-950">
-              Lập kế hoạch học kỳ
+              Học phần trong kế hoạch học kỳ
             </h2>
             <p className="mt-1 text-sm text-slate-500">
-              Kế hoạch năm học đang chọn: {selectedYearPlan.name}
+              Kế hoạch học kỳ đang chọn: {selectedSemesterPlan?.name ?? "Đang tải..."}
             </p>
           </div>
 
-          <div className="rounded-lg border border-slate-200 bg-white p-4">
-            <h3 className="flex items-center gap-2 text-sm font-bold text-slate-950">
-              <Lightbulb size={16} aria-hidden="true" />
-              Chọn lớp và lấy gợi ý học phần
-            </h3>
-            {isSelectedPlanLocked ? (
-              <div className="mt-3 rounded-lg border border-sky-100 bg-sky-50 px-3 py-2 text-sm leading-6 text-sky-800">
-                Kế hoạch học kỳ đã được khóa nên phần mở học phần không còn cho
-                chỉnh sửa.
-              </div>
-            ) : null}
-            <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
-              <div className="max-h-72 overflow-auto rounded-lg border border-slate-200">
-                <div className="grid divide-y divide-slate-100">
-                  {classOptions.map((option) => {
-                    const id = Number(option.value);
-                    return (
-                      <label
-                        key={option.value}
-                        className={[
-                          "flex items-center gap-3 px-3 py-2 text-sm hover:bg-slate-50",
-                          isSelectedPlanLocked
-                            ? "cursor-not-allowed opacity-60"
-                            : "cursor-pointer",
-                        ].join(" ")}
-                      >
-                        <input
-                          type="checkbox"
-                          disabled={isSelectedPlanLocked}
-                          className="size-4 rounded border-slate-300 text-brand-600 focus:ring-brand-200"
-                          checked={selectedClassIds.includes(id)}
-                          onChange={() => toggleClass(id)}
-                        />
-                        <span className="font-medium text-slate-700">
-                          {option.label}
-                        </span>
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
-              <div className="space-y-3">
-                <SelectInput
-                  label="Kế hoạch học kỳ đang thao tác"
-                  options={semesterRows.map((plan) => ({
-                    value: String(plan.id),
-                    label: `${plan.name} - ${semesterPlanStatusLabels[plan.status]}`,
-                  }))}
-                  placeholder="Chọn kế hoạch học kỳ"
-                  value={selectedSemesterPlanId}
-                  onChange={(event) => {
-                    setSelectedSemesterPlanId(event.target.value);
-                    setSuggestionMatrix(null);
-                    setSelectedMatrixKeys([]);
-                  }}
-                />
-                <Button
-                  className="w-full"
-                  variant="secondary"
-                  disabled={
-                    !selectedSemesterPlanId ||
-                    selectedClassIds.length === 0 ||
-                    isSelectedPlanLocked
-                  }
-                  isLoading={suggestMutation.isPending}
-                  onClick={() => suggestMutation.mutate()}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap gap-2">
+              {selectedSemesterPlan ? (
+                <span
+                  className={[
+                    "inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ring-1",
+                    statusClassNames[selectedSemesterPlan.status],
+                  ].join(" ")}
                 >
-                  Lấy gợi ý học phần
-                </Button>
-              </div>
+                  {semesterPlanStatusLabels[selectedSemesterPlan.status]}
+                </span>
+              ) : null}
+              <span className="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-200">
+                {selectedSemesterPlan?.semesterName ?? "Học kỳ"}
+              </span>
+              <span className="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-200">
+                {openedSubjectsQuery.data?.length ?? selectedSemesterPlan?.openedCount ?? 0} học phần đã mở
+              </span>
             </div>
-          </div>
-
-          <div className="space-y-3">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <h3 className="text-sm font-bold text-slate-950">
-                  Ma trận lớp x học phần
-                </h3>
-                <p className="mt-1 text-sm text-slate-500">
-                  Chọn các ô cần mở trong kế hoạch học kỳ đang thao tác.
-                </p>
-              </div>
+            <div className="flex flex-col gap-2 sm:flex-row">
               <Button
-                disabled={
-                  !suggestionMatrix ||
-                  selectedMatrixKeys.length === 0 ||
-                  isSelectedPlanLocked
-                }
-                isLoading={openCoursesMutation.isPending}
-                leftIcon={<Save size={16} aria-hidden="true" />}
-                onClick={() => openCoursesMutation.mutate()}
+                variant="secondary"
+                disabled={!selectedSemesterPlan}
+                onClick={() => selectedSemesterPlan && openWorkflowModal(selectedSemesterPlan)}
               >
-                Lưu học phần mở
+                Trạng thái
+              </Button>
+              <Button
+                disabled={!selectedSemesterPlan || isSelectedPlanLocked}
+                leftIcon={<Lightbulb size={16} aria-hidden="true" />}
+                onClick={planningDisclosure.open}
+              >
+                Lập kế hoạch mở học phần
               </Button>
             </div>
-            <SuggestionMatrix
-              matrix={
-                suggestionMatrix ?? { classes: [], courses: [], cells: [] }
-              }
-              selectedKeys={selectedMatrixKeys}
-              onToggle={(key) => {
-                if (isSelectedPlanLocked) return;
-                setSelectedMatrixKeys((current) =>
-                  current.includes(key)
-                    ? current.filter((item) => item !== key)
-                    : [...current, key],
-                );
-              }}
-            />
           </div>
 
-          <div className="space-y-3">
-            <h3 className="text-sm font-bold text-slate-950">Kết quả đã lưu</h3>
-            <OpenedSubjectTable rows={openedSubjectsQuery.data ?? []} />
-          </div>
+          <OpenedSubjectTable rows={openedSubjectsQuery.data ?? []} />
         </section>
-      ) : null}
+      ) : (
+        <section className="rounded-lg border border-dashed border-slate-300 bg-white p-6 text-center shadow-sm">
+          <BookOpenCheck className="mx-auto text-slate-400" size={28} aria-hidden="true" />
+          <h2 className="mt-3 text-base font-bold text-slate-950">
+            Chọn một kế hoạch học kỳ
+          </h2>
+          <p className="mx-auto mt-1 max-w-2xl text-sm leading-6 text-slate-500">
+            Bấm vào một dòng trong bảng để xem nhanh các học phần đã mở, hoặc bấm vào tên kế hoạch học kỳ để mở trang chi tiết.
+          </p>
+        </section>
+      )}
 
       <FormModal
         isOpen={semesterFormDisclosure.isOpen}
@@ -595,6 +555,130 @@ export default function SemesterTrainingPlanPage() {
           <div className="rounded-lg border border-amber-100 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-800">
             Vui lòng chọn kế hoạch năm học trước, sau đó mở lại form tạo kế
             hoạch học kỳ.
+          </div>
+        )}
+      </FormModal>
+
+      <FormModal
+        isOpen={planningDisclosure.isOpen}
+        title="Lập kế hoạch mở học phần"
+        description={
+          selectedSemesterPlan
+            ? `Mở học phần cho ${selectedSemesterPlan.name}.`
+            : "Chọn một kế hoạch học kỳ trước khi lấy gợi ý học phần."
+        }
+        onClose={() => {
+          if (!suggestMutation.isPending && !openCoursesMutation.isPending) {
+            planningDisclosure.close();
+          }
+        }}
+      >
+        {selectedSemesterPlan ? (
+          <div className="space-y-5">
+            {isSelectedPlanLocked ? (
+              <div className="rounded-lg border border-sky-100 bg-sky-50 px-3 py-2 text-sm leading-6 text-sky-800">
+                Kế hoạch học kỳ đã được khóa nên phần mở học phần không còn cho chỉnh sửa.
+              </div>
+            ) : null}
+
+            <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
+              <div>
+                <h3 className="flex items-center gap-2 text-sm font-bold text-slate-950">
+                  <Lightbulb size={16} aria-hidden="true" />
+                  Chọn lớp và lấy gợi ý học phần
+                </h3>
+                <div className="mt-3 max-h-72 overflow-auto rounded-lg border border-slate-200">
+                  <div className="grid divide-y divide-slate-100">
+                    {classOptions.map((option) => {
+                      const id = Number(option.value);
+                      return (
+                        <label
+                          key={option.value}
+                          className={[
+                            "flex items-center gap-3 px-3 py-2 text-sm hover:bg-slate-50",
+                            isSelectedPlanLocked
+                              ? "cursor-not-allowed opacity-60"
+                              : "cursor-pointer",
+                          ].join(" ")}
+                        >
+                          <input
+                            type="checkbox"
+                            disabled={isSelectedPlanLocked}
+                            className="size-4 rounded border-slate-300 text-brand-600 focus:ring-brand-200"
+                            checked={selectedClassIds.includes(id)}
+                            onChange={() => toggleClass(id)}
+                          />
+                          <span className="font-medium text-slate-700">
+                            {option.label}
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase text-slate-500">Kế hoạch học kỳ</p>
+                  <p className="mt-1 text-sm font-bold text-slate-950">{selectedSemesterPlan.name}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase text-slate-500">Học kỳ</p>
+                  <p className="mt-1 text-sm font-bold text-slate-950">{selectedSemesterPlan.semesterName}</p>
+                </div>
+                <Button
+                  className="w-full"
+                  variant="secondary"
+                  disabled={selectedClassIds.length === 0 || isSelectedPlanLocked}
+                  isLoading={suggestMutation.isPending}
+                  onClick={() => suggestMutation.mutate()}
+                >
+                  Lấy gợi ý học phần
+                </Button>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <h3 className="text-sm font-bold text-slate-950">
+                    Ma trận lớp x học phần
+                  </h3>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Chọn các ô cần mở trong kế hoạch học kỳ đang thao tác.
+                  </p>
+                </div>
+                <Button
+                  disabled={
+                    !suggestionMatrix ||
+                    selectedMatrixKeys.length === 0 ||
+                    isSelectedPlanLocked
+                  }
+                  isLoading={openCoursesMutation.isPending}
+                  leftIcon={<Save size={16} aria-hidden="true" />}
+                  onClick={() => openCoursesMutation.mutate()}
+                >
+                  Lưu học phần mở
+                </Button>
+              </div>
+              <SuggestionMatrix
+                matrix={suggestionMatrix ?? { classes: [], courses: [], cells: [] }}
+                selectedKeys={selectedMatrixKeys}
+                onToggle={(key) => {
+                  if (isSelectedPlanLocked) return;
+                  setSelectedMatrixKeys((current) =>
+                    current.includes(key)
+                      ? current.filter((item) => item !== key)
+                      : [...current, key],
+                  );
+                }}
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-lg border border-amber-100 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-800">
+            Vui lòng chọn một kế hoạch học kỳ trong bảng trước khi thao tác.
           </div>
         )}
       </FormModal>

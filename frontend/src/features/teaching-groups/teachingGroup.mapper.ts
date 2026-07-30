@@ -32,6 +32,7 @@ export function mapOpenedClassCourse(
     theoryPeriods: Number(dto.hocPhan?.soTietLyThuyet ?? 0),
     practicePeriods: Number(dto.hocPhan?.soTietThucHanh ?? 0),
     totalPeriods: Number(dto.hocPhan?.tongSoTiet ?? 0),
+    classCoefficient: Number(dto.hocPhan?.heSoSiSo ?? 1),
     classSize: Number(dto.siSo ?? dto.lop?.siSo ?? 0),
     groupCount: dto.nhomHocPhan?.length ?? 0,
   };
@@ -55,6 +56,7 @@ export function mapTeachingGroup(dto: TeachingGroupDto): TeachingGroup {
     courseName: classCourse?.hocPhan?.tenHocPhan ?? "-",
     classSize: Number(dto.siSo ?? 0),
     periods: Number(dto.soTiet ?? 0),
+    classCoefficient: Number(classCourse?.hocPhan?.heSoSiSo ?? 1),
     note: dto.ghiChu?.trim() ?? "",
     assignmentCount: dto._count?.phanCongGiangDay ?? 0,
   };

@@ -30,9 +30,10 @@ export const assignmentStatusLabels: Record<AssignmentStatus, string> = {
 
 export const workloadStatusLabels: Record<WorkloadStatus, string> = {
   chua_phan_cong: "Chưa phân công",
-  binh_thuong: "Bình thường",
-  cao: "Cao",
-  qua_tai: "Quá tải",
+  chua_dinh_muc: "Chưa có định mức",
+  thieu_gio: "Thiếu giờ",
+  du_gio: "Đủ giờ",
+  thua_gio: "Thừa giờ",
 };
 
 const toNumber = (value: number | string | null | undefined, fallback = 0) => {
@@ -100,6 +101,7 @@ export function buildAssignmentStats(
 
   let totalAssignments = 0;
   let totalPeriods = 0;
+  let totalStandardHours = 0;
 
   rows.forEach((row) => {
     if (!row.assignment) return;
@@ -108,6 +110,7 @@ export function buildAssignmentStats(
     lecturerIds.add(row.assignment.lecturerId);
     totalAssignments += 1;
     totalPeriods += row.assignment.assignedPeriods;
+    totalStandardHours += row.assignment.convertedPeriods;
   });
 
   return {
@@ -116,21 +119,21 @@ export function buildAssignmentStats(
     unassignedGroups: allGroupIds.size - assignedGroupIds.size,
     totalAssignments,
     totalPeriods,
+    totalStandardHours,
     lecturerCount: lecturerIds.size,
   };
 }
 
 export function getWorkloadStatus(
-  totalPeriods: number,
-  quota: number,
+  convertedHours: number,
+  semesterQuota: number,
 ): WorkloadStatus {
-  if (totalPeriods <= 0) return "chua_phan_cong";
-  if (quota > 0 && totalPeriods > quota) return "qua_tai";
-  if (quota > 0 && totalPeriods >= quota * 0.8) return "cao";
-  if (totalPeriods > 220) return "qua_tai";
-  if (totalPeriods > 120) return "cao";
+  if (convertedHours <= 0) return "chua_phan_cong";
+  if (semesterQuota <= 0) return "chua_dinh_muc";
+  if (convertedHours > semesterQuota) return "thua_gio";
+  if (convertedHours === semesterQuota) return "du_gio";
 
-  return "binh_thuong";
+  return "thieu_gio";
 }
 
 export function buildLecturerWorkloads(
@@ -165,8 +168,18 @@ export function buildLecturerWorkloads(
       (total, assignment) => total + assignment.assignedPeriods,
       0,
     );
+    const totalStandardHours = lecturerAssignments.reduce(
+      (total, assignment) => total + assignment.convertedPeriods,
+      0,
+    );
 
-    const status = getWorkloadStatus(totalPeriods, lecturer.quota);
+    const yearlyQuota = lecturer.quota;
+    const semesterQuota = yearlyQuota > 0 ? yearlyQuota / 2 : 0;
+    const excessHours =
+      semesterQuota > 0 ? Math.max(0, totalStandardHours - semesterQuota) : 0;
+    const shortageHours =
+      semesterQuota > 0 ? Math.max(0, semesterQuota - totalStandardHours) : 0;
+    const status = getWorkloadStatus(totalStandardHours, semesterQuota);
 
     return {
       lecturerId: lecturer.id,
@@ -179,7 +192,12 @@ export function buildLecturerWorkloads(
       internshipGroupCount,
       totalGroupCount: lecturerAssignments.length,
       totalPeriods,
-      quota: lecturer.quota,
+      totalStandardHours,
+      yearlyQuota,
+      semesterQuota,
+      excessHours,
+      shortageHours,
+      quota: semesterQuota,
       status,
       statusLabel: workloadStatusLabels[status],
     };

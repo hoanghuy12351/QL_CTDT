@@ -173,7 +173,6 @@ export const trainingPlansApi = {
       lopId: number;
       hocPhanId: number;
       chuongTrinhHocPhanId: number;
-      tienDo: string;
     }>;
   }) => {
     const { data } = await axiosClient.post<ApiResponse<OpenedSubjectDto[]>>(

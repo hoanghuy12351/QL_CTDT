@@ -2,7 +2,6 @@ import type {
   Prisma,
   phanCongGiangDayTrangThai,
   keHoachLopHocPhanNguonTao,
-  keHoachLopHocPhanTienDo,
   nhomHocPhanLoaiNhom,
   phanCongGiangDayVaiTro,
 } from "@prisma/client";
@@ -24,6 +23,13 @@ export const keHoachRepository = {
   findSemester(hocKyId: number) {
     return prisma.hocKy.findUnique({
       where: { hocKyId },
+    });
+  },
+
+  listActiveSemesters() {
+    return prisma.hocKy.findMany({
+      where: { trangThai: "dang_ap_dung" },
+      orderBy: [{ thuTuTrongNam: "asc" }, { hocKyId: "asc" }],
     });
   },
 
@@ -117,6 +123,12 @@ export const keHoachRepository = {
       loaiTuan: "hoc";
       ghiChu?: string | null;
     }>;
+    keHoachHocKy?: Array<{
+      hocKyId: number;
+      tenKeHoachHocKy?: string | null;
+      trangThai?: "du_thao" | "dang_thuc_hien" | "da_dong";
+      ghiChu?: string | null;
+    }>;
   }) {
     return prisma.keHoachDaoTao.create({
       data: {
@@ -132,11 +144,24 @@ export const keHoachRepository = {
               create: input.tuanDaoTao,
             }
           : undefined,
+        keHoachHocKy: input.keHoachHocKy?.length
+          ? {
+              create: input.keHoachHocKy,
+            }
+          : undefined,
       },
       include: {
         namHoc: true,
         khoa: true,
-        keHoachHocKy: true,
+        keHoachHocKy: {
+          include: {
+            hocKy: true,
+            _count: {
+              select: { keHoachLopHocPhan: true },
+            },
+          },
+          orderBy: { keHoachHocKyId: "desc" },
+        },
         tuanDaoTao: {
           orderBy: { soTuan: "asc" },
         },
@@ -342,39 +367,93 @@ export const keHoachRepository = {
     ]);
   },
 
-  findSuggestedSubjects(input: { lopIds: number[]; hocKyDuKien?: number }) {
-    return prisma.tienDoHocPhanLop.findMany({
+  findClassesForSuggestion(lopIds: number[]) {
+    return prisma.lop.findMany({
       where: {
-        trangThai: { in: ["chua_hoc", "tam_hoan"] },
-        ...(input.hocKyDuKien ? { hocKyDuKien: input.hocKyDuKien } : {}),
-        OR: input.lopIds.map((lopId) => ({
-          lopId,
-          chuongTrinhHocPhan: {
-            chuongTrinhDaoTao: {
-              lopChuongTrinh: {
-                some: {
-                  lopId,
-                  trangThai: "dang_ap_dung",
-                },
-              },
-            },
-          },
-        })),
+        lopId: { in: lopIds },
       },
       include: {
-        lop: true,
-        chuongTrinhHocPhan: {
-          include: {
-            hocPhan: true,
-            chuongTrinhDaoTao: true,
-          },
-        },
+        khoaHoc: true,
       },
-      orderBy: [
-        { hocKyDuKien: "asc" },
-        { chuongTrinhHocPhan: { thuTu: "asc" } },
-      ],
     });
+  },
+
+  async findSuggestedSubjects(input: {
+    classSemesters: Array<{ lopId: number; hocKyDuKien: number }>;
+  }) {
+    const results: Array<{
+      lopId: number;
+      lop: unknown;
+      chuongTrinhHocPhanId: number;
+      hocKyDuKien: number;
+      tienDoDuKien: string | null;
+      trangThai: string | null;
+      chuongTrinhHocPhan: {
+        chuongTrinhHocPhanId: number;
+        chuongTrinhId: number;
+        hocPhanId: number;
+        hocKyDuKien: number;
+        hocPhan: unknown;
+        chuongTrinhDaoTao: unknown;
+      };
+    }> = [];
+
+    for (const item of input.classSemesters) {
+      const activeCurriculum = await prisma.lopChuongTrinh.findFirst({
+        where: {
+          lopId: item.lopId,
+          trangThai: "dang_ap_dung",
+        },
+        include: {
+          lop: { include: { khoaHoc: true } },
+        },
+        orderBy: { lopChuongTrinhId: "desc" },
+      });
+
+      if (!activeCurriculum) continue;
+
+      const openedSubjects = await prisma.keHoachLopHocPhan.findMany({
+        where: {
+          lopId: item.lopId,
+          trangThai: { not: "da_huy" },
+        },
+        select: { hocPhanId: true },
+      });
+      const openedSubjectIds = openedSubjects.map((subject) => subject.hocPhanId);
+
+      const curriculumCourses = await prisma.chuongTrinhHocPhan.findMany({
+        where: {
+          chuongTrinhId: activeCurriculum.chuongTrinhId,
+          hocKyDuKien: item.hocKyDuKien,
+          ...(openedSubjectIds.length
+            ? { hocPhanId: { notIn: openedSubjectIds } }
+            : {}),
+        },
+        include: {
+          hocPhan: {
+            include: {
+              boMon: true,
+            },
+          },
+          chuongTrinhDaoTao: true,
+        },
+        orderBy: [{ thuTu: "asc" }, { chuongTrinhHocPhanId: "asc" }],
+      });
+
+      for (const course of curriculumCourses) {
+        results.push({
+          lopId: item.lopId,
+          lop: activeCurriculum.lop,
+          chuongTrinhHocPhanId: course.chuongTrinhHocPhanId,
+          hocKyDuKien: course.hocKyDuKien,
+          tienDoDuKien: "ca_ky",
+          trangThai: "chua_hoc",
+          chuongTrinhHocPhan: course,
+        });
+      }
+    }
+
+    return results;
   },
 
   findKeHoachHocKy(id: number) {
@@ -637,46 +716,81 @@ export const keHoachRepository = {
     });
   },
 
-  findProgressForOpenSubjects(
+  async findProgressForOpenSubjects(
     items: Array<{
       lopId: number;
       hocPhanId: number;
       chuongTrinhHocPhanId?: number;
     }>,
   ) {
-    if (items.length === 0) return Promise.resolve([]);
+    const results: Array<{
+      lopId: number;
+      lop: { siSo?: number | null };
+      chuongTrinhHocPhanId: number;
+      hocKyDuKien: number;
+      tienDoDuKien: string | null;
+      chuongTrinhHocPhan: {
+        chuongTrinhHocPhanId: number;
+        hocPhanId: number;
+        hocKyDuKien: number;
+        hocPhan: {
+          soTietThucHanh?: Prisma.Decimal | number | null;
+        };
+        chuongTrinhDaoTao: unknown;
+      };
+    }> = [];
 
-    return prisma.tienDoHocPhanLop.findMany({
-      where: {
-        trangThai: "chua_hoc",
-        OR: items.map((item) => ({
+    for (const item of items) {
+      const activeCurriculum = await prisma.lopChuongTrinh.findFirst({
+        where: {
           lopId: item.lopId,
+          trangThai: "dang_ap_dung",
+        },
+        include: {
+          lop: true,
+        },
+        orderBy: { lopChuongTrinhId: "desc" },
+      });
+
+      if (!activeCurriculum) continue;
+
+      const curriculumCourse = await prisma.chuongTrinhHocPhan.findFirst({
+        where: {
+          chuongTrinhId: activeCurriculum.chuongTrinhId,
+          hocPhanId: item.hocPhanId,
           ...(item.chuongTrinhHocPhanId
             ? { chuongTrinhHocPhanId: item.chuongTrinhHocPhanId }
             : {}),
-          chuongTrinhHocPhan: {
-            hocPhanId: item.hocPhanId,
-            chuongTrinhDaoTao: {
-              lopChuongTrinh: {
-                some: {
-                  lopId: item.lopId,
-                  trangThai: "dang_ap_dung",
-                },
-              },
-            },
-          },
-        })),
-      },
-      include: {
-        lop: true,
-        chuongTrinhHocPhan: {
-          include: {
-            hocPhan: true,
-            chuongTrinhDaoTao: true,
-          },
         },
-      },
-    });
+        include: {
+          hocPhan: true,
+          chuongTrinhDaoTao: true,
+        },
+      });
+
+      if (!curriculumCourse) continue;
+
+      const alreadyOpened = await prisma.keHoachLopHocPhan.findFirst({
+        where: {
+          lopId: item.lopId,
+          hocPhanId: item.hocPhanId,
+          trangThai: { not: "da_huy" },
+        },
+      });
+
+      if (alreadyOpened) continue;
+
+      results.push({
+        lopId: item.lopId,
+        lop: activeCurriculum.lop,
+        chuongTrinhHocPhanId: curriculumCourse.chuongTrinhHocPhanId,
+        hocKyDuKien: curriculumCourse.hocKyDuKien,
+        tienDoDuKien: "ca_ky",
+        chuongTrinhHocPhan: curriculumCourse,
+      });
+    }
+
+    return results;
   },
 
   async createClassSubjectPlans(input: {
@@ -685,7 +799,6 @@ export const keHoachRepository = {
       lopId: number;
       hocPhanId: number;
       chuongTrinhHocPhanId?: number;
-      tienDo: keHoachLopHocPhanTienDo;
       siSo: number;
       coThucHanh: boolean;
       coChiaNhomThucHanh: boolean;
@@ -708,7 +821,6 @@ export const keHoachRepository = {
           },
           update: {
             chuongTrinhHocPhanId: item.chuongTrinhHocPhanId,
-            tienDo: item.tienDo,
             siSo: item.siSo,
             coThucHanh: item.coThucHanh,
             coChiaNhomThucHanh: item.coChiaNhomThucHanh,
@@ -722,7 +834,6 @@ export const keHoachRepository = {
             lopId: item.lopId,
             hocPhanId: item.hocPhanId,
             chuongTrinhHocPhanId: item.chuongTrinhHocPhanId,
-            tienDo: item.tienDo,
             siSo: item.siSo,
             coThucHanh: item.coThucHanh,
             coChiaNhomThucHanh: item.coChiaNhomThucHanh,
@@ -979,6 +1090,27 @@ export const keHoachRepository = {
     });
   },
 
+  listTeachersCanTeachCourse(hocPhanId: number) {
+    return prisma.giangVienHocPhan.findMany({
+      where: { hocPhanId },
+      include: {
+        giangVien: {
+          include: {
+            boMon: true,
+          },
+        },
+      },
+      orderBy: [
+        {
+          giangVien: {
+            hoTen: "asc",
+          },
+        },
+        { giangVienId: "asc" },
+      ],
+    });
+  },
+
   createAssignment(input: {
     nhomHocPhanId: number;
     giangVienId: number;
@@ -1004,6 +1136,10 @@ export const keHoachRepository = {
         giangVien: {
           include: {
             boMon: true,
+            phanCongGiangDay: {
+              where: { trangThai: { not: "da_huy" } },
+              select: { soTietQuyDoi: true },
+            },
           },
         },
         nhomHocPhan: {
@@ -1152,6 +1288,10 @@ export const keHoachRepository = {
         giangVien: {
           include: {
             boMon: true,
+            phanCongGiangDay: {
+              where: { trangThai: { not: "da_huy" } },
+              select: { soTietQuyDoi: true },
+            },
           },
         },
         lichDayTheoTuan: {
@@ -1209,6 +1349,10 @@ export const keHoachRepository = {
         giangVien: {
           include: {
             boMon: true,
+            phanCongGiangDay: {
+              where: { trangThai: { not: "da_huy" } },
+              select: { soTietQuyDoi: true },
+            },
           },
         },
         nhomHocPhan: {
@@ -1255,6 +1399,10 @@ export const keHoachRepository = {
         giangVien: {
           include: {
             boMon: true,
+            phanCongGiangDay: {
+              where: { trangThai: { not: "da_huy" } },
+              select: { soTietQuyDoi: true },
+            },
           },
         },
         nhomHocPhan: {
@@ -1327,39 +1475,22 @@ export const keHoachRepository = {
     }>;
   }) {
     return prisma.$transaction(async (tx) => {
-      const activeWeekIds = input.lich.map((item) => item.tuanId);
-
       await tx.lichDayTheoTuan.deleteMany({
         where: {
           phanCongId: input.phanCongId,
-          ...(activeWeekIds.length > 0
-            ? { tuanId: { notIn: activeWeekIds } }
-            : {}),
         },
       });
 
-      for (const item of input.lich) {
-        await tx.lichDayTheoTuan.upsert({
-          where: {
-            phanCongId_tuanId: {
-              phanCongId: input.phanCongId,
-              tuanId: item.tuanId,
-            },
-          },
-          update: {
-            phongHocId: item.phongHocId,
-            soTiet: item.soTiet,
-            noiDungGiangDay: item.noiDungGiangDay,
-            ghiChu: item.ghiChu,
-          },
-          create: {
+      if (input.lich.length > 0) {
+        await tx.lichDayTheoTuan.createMany({
+          data: input.lich.map((item) => ({
             phanCongId: input.phanCongId,
             tuanId: item.tuanId,
             phongHocId: item.phongHocId,
             soTiet: item.soTiet,
             noiDungGiangDay: item.noiDungGiangDay,
             ghiChu: item.ghiChu,
-          },
+          })),
         });
       }
 
@@ -1375,7 +1506,7 @@ export const keHoachRepository = {
           },
         },
       });
-    });
+    }, { timeout: 15000 });
   },
 
   findSemesterReportData(keHoachHocKyId: number) {
@@ -1396,6 +1527,11 @@ export const keHoachRepository = {
           include: {
             lop: true,
             hocPhan: true,
+            chuongTrinhHocPhan: {
+              include: {
+                tienDoHocPhanLop: true,
+              },
+            },
             nhomHocPhan: {
               include: {
                 phanCongGiangDay: {

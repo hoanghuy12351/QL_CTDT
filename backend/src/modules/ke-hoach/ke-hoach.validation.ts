@@ -101,7 +101,6 @@ export const moHocPhanItemSchema = z.object({
   lopId: z.coerce.number().int().positive(),
   hocPhanId: z.coerce.number().int().positive(),
   chuongTrinhHocPhanId: z.coerce.number().int().positive().optional(),
-  tienDo: z.enum(["tien_do_1", "tien_do_2", "ca_ky"]).default("ca_ky"),
   siSo: z.coerce.number().int().min(0).default(0),
   coThucHanh: z.boolean().default(false),
   coChiaNhomThucHanh: z.boolean().default(false),
@@ -170,7 +169,7 @@ export const phanCongSchema = z
       ])
       .default("chinh"),
     soTietPhanCong: z.coerce.number().min(0).optional(),
-    heSoLop: z.coerce.number().min(0).default(1),
+    heSoLop: z.coerce.number().min(0).optional(),
     trangThai: z
       .enum(["du_thao", "da_phan_cong", "da_xac_nhan", "da_huy"])
       .default("da_phan_cong"),

@@ -97,6 +97,7 @@ export function mapOpenedSubject(dto: OpenedSubjectDto): OpenedSubject {
     progress: dto.tienDo ?? "ca_ky",
     status: dto.trangThai ?? "du_thao",
     groupCount: dto.nhomHocPhan?.length ?? 0,
+    curriculumSemester: dto.chuongTrinhHocPhan?.hocKyDuKien ?? null,
   };
 }
 
